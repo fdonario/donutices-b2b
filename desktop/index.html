@@ -1,1 +1,2176 @@
-placeholder
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Donutices — Pipeline B2B</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink:    #f7318a;
+  --red:     #ff3d1f;
+  --green:   #00a878;
+  --blue:    #2e86de;
+  --orange:  #f0a500;
+  --purple:  #6c5ce7;
+  --yellow:  #FFD000;
+  --bg:      #fdf5f7;
+  --card:    #ffffff;
+  --surface: #fce9ee;
+  --border:  #f0d4dc;
+  --text:    #1a0a10;
+  --muted:   #8a6070;
+  --r:       10px;
+}
+*{ box-sizing:border-box; margin:0; padding:0; }
+html { font-size: 17px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'League Spartan', sans-serif;
+  font-weight: 400;
+  min-height: 100vh;
+  position: relative;
+}
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image: radial-gradient(circle at 1px 1px, #f0d4dc 1px, transparent 0);
+  background-size: 28px 28px;
+  pointer-events:none; opacity:.3; z-index:0;
+}
+.wrap { position:relative; z-index:1; max-width:1600px; margin:0 auto; padding:0 18px 60px; }
+
+/* ── HEADER ── */
+header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 0 18px;
+  border-bottom: 3px solid transparent;
+  border-image: linear-gradient(90deg,#f7318a,#ff3d1f,#f0d4dc) 1;
+  margin-bottom:22px; flex-wrap:wrap; gap:14px;
+  box-shadow: 0 3px 16px rgba(247,49,138,0.08);
+}
+.brand { display:flex; align-items:center; gap:14px; }
+.brand-logo { height:58px; width:auto; object-fit:contain; flex-shrink:0; }
+.brand-name {
+  font-family:'League Spartan',sans-serif; font-size:1.5rem; font-weight:800;
+  background:linear-gradient(135deg,#f7318a,#ff3d1f);
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; line-height:1; letter-spacing:-0.5px;
+}
+.brand-sub { font-size:0.65rem; color:var(--muted); letter-spacing:2.5px; text-transform:uppercase; margin-top:3px; font-weight:500; }
+.header-link {
+  font-family:'League Spartan',sans-serif; font-size:0.75rem; font-weight:600;
+  color:var(--muted); text-decoration:none; letter-spacing:0.5px;
+  padding:8px 18px; border:1px solid var(--border); border-radius:999px;
+  transition:all .2s;
+}
+.header-link:hover { color:var(--pink); border-color:var(--pink); }
+
+/* ── KPI STRIP ── */
+.kpi-strip { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:22px; }
+.kpi {
+  background:var(--card); border:1px solid var(--border); border-radius:var(--r);
+  padding:16px 18px; position:relative; overflow:hidden;
+  box-shadow:0 2px 14px rgba(247,49,138,0.07);
+  transition:box-shadow .2s, border-color .2s;
+}
+.kpi:hover { border-color:var(--stripe); box-shadow:0 4px 20px rgba(247,49,138,0.13); }
+.kpi::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--stripe); border-radius:2px 2px 0 0; }
+.kpi-label { font-size:0.58rem; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; font-weight:600; }
+.kpi-value { font-family:'League Spartan',sans-serif; font-size:1.7rem; font-weight:800; color:var(--stripe); line-height:1; }
+.kpi-sub { font-size:0.62rem; color:var(--muted); margin-top:5px; font-weight:400; }
+
+/* ── TOOLBAR ── */
+.toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+.btn {
+  font-family:'League Spartan',sans-serif; font-size:0.78rem; font-weight:700;
+  padding:9px 20px; border-radius:8px; border:none; cursor:pointer;
+  transition:opacity .15s, transform .1s; letter-spacing:0.3px;
+}
+.btn:hover { opacity:.88; }
+.btn:active { transform:scale(.97); }
+.btn-primary { background:linear-gradient(135deg,#f7318a,#ff3d1f); color:#fff; box-shadow:0 2px 10px rgba(247,49,138,.25); }
+.btn-secondary { background:var(--card); border:1px solid var(--border); color:var(--muted); }
+.btn-danger { background:rgba(232,64,64,.1); color:#c0292a; border:1px solid rgba(232,64,64,.2); }
+.btn-sm { padding:6px 14px; font-size:0.68rem; }
+
+.view-toggle { display:flex; background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.view-btn { padding:8px 16px; font-size:0.68rem; font-family:'League Spartan',sans-serif; font-weight:700; border:none; cursor:pointer; background:transparent; color:var(--muted); transition:all .15s; letter-spacing:0.3px; }
+.view-btn.active { background:var(--pink); color:#fff; }
+
+.toolbar input, .toolbar select {
+  font-family:'League Spartan',sans-serif; font-size:0.78rem; font-weight:500;
+  padding:8px 12px; border-radius:8px; border:1px solid var(--border);
+  background:var(--card); color:var(--text); outline:none; transition:border-color .15s;
+}
+.toolbar input { width:220px; }
+.toolbar input:focus, .toolbar select:focus { border-color:var(--pink); }
+
+/* ── BACKUP BAR ── */
+.backup-bar {
+  background:var(--card); border:1px solid var(--border); border-radius:var(--r);
+  padding:11px 18px; display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:18px; flex-wrap:wrap; gap:10px;
+  box-shadow:0 2px 12px rgba(247,49,138,.07);
+  border-left:3px solid var(--pink);
+}
+.backup-info { font-size:0.68rem; color:var(--muted); font-weight:500; }
+.backup-info strong { color:var(--text); font-weight:700; }
+.backup-actions { display:flex; gap:8px; }
+
+/* ── KANBAN ── */
+.kanban-board { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; }
+.kanban-col {
+  background:var(--card); border:1px solid var(--border); border-radius:var(--r);
+  min-height:320px; padding:10px;
+  box-shadow:0 2px 12px rgba(247,49,138,0.06);
+}
+.kanban-header {
+  font-family:'League Spartan',sans-serif; font-size:0.62rem; font-weight:800;
+  letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px;
+  padding:6px 8px; border-radius:6px; text-align:center;
+}
+.lead-card {
+  background:var(--bg); border:1px solid var(--border); border-radius:8px;
+  padding:10px 11px; margin-bottom:8px; cursor:pointer;
+  transition:box-shadow .15s, border-color .15s, transform .1s;
+}
+.lead-card:hover { box-shadow:0 4px 14px rgba(247,49,138,.14); border-color:var(--pink); transform:translateY(-1px); }
+.lc-name { font-family:'League Spartan',sans-serif; font-weight:700; font-size:0.78rem; color:var(--text); margin-bottom:2px; }
+.lc-company { font-size:0.65rem; color:var(--muted); margin-bottom:6px; font-weight:500; }
+.lc-meta { display:flex; gap:5px; align-items:center; flex-wrap:wrap; }
+.lc-valor { font-size:0.66rem; font-weight:700; color:var(--green); }
+.lc-channel { font-size:0.6rem; color:var(--muted); width:100%; margin-top:3px; font-weight:500; }
+.lc-recorrencia { font-size:0.58rem; color:var(--orange); font-weight:700; }
+.badge { font-size:0.6rem; padding:2px 8px; border-radius:999px; font-weight:700; white-space:nowrap; }
+.badge-ok   { background:rgba(0,168,120,.12); color:#007a57; }
+.badge-late { background:rgba(232,64,64,.12); color:#c0292a; }
+.badge-soon { background:rgba(240,165,0,.15); color:#b07a00; }
+.badge-blue { background:rgba(46,134,222,.12); color:#1a6aaa; }
+.empty-col { font-size:0.64rem; color:var(--muted); text-align:center; padding:24px 0; font-weight:500; }
+
+/* ── LIST VIEW ── */
+.list-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+.list-table { width:100%; border-collapse:collapse; font-size:0.72rem; }
+.list-table th { font-family:'League Spartan',sans-serif; font-size:0.6rem; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); padding:10px 14px; border-bottom:1px solid var(--border); text-align:left; background:var(--surface); }
+.list-table td { padding:9px 14px; border-bottom:1px solid rgba(0,0,0,.04); color:var(--muted); font-weight:500; }
+.list-table td:first-child { color:var(--text); font-weight:700; }
+.list-table tr:hover td { background:rgba(247,49,138,.03); cursor:pointer; }
+
+/* ── FOLLOWUP VIEW ── */
+.fu-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.fu-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:18px 20px; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+.fu-card-title { font-family:'League Spartan',sans-serif; font-size:0.75rem; font-weight:800; margin-bottom:14px; display:flex; align-items:center; gap:8px; letter-spacing:0.3px; }
+.fu-row { display:flex; gap:12px; align-items:center; padding:8px 0; border-bottom:1px solid rgba(0,0,0,.05); cursor:pointer; }
+.fu-row:hover { opacity:.8; }
+.fu-name { font-size:0.75rem; color:var(--text); font-weight:700; flex:1; }
+.fu-co   { font-size:0.64rem; color:var(--muted); font-weight:500; }
+.fu-date { font-family:'League Spartan',sans-serif; font-weight:800; font-size:0.75rem; width:60px; text-align:right; flex-shrink:0; }
+.fu-empty { font-size:0.68rem; color:var(--muted); text-align:center; padding:20px 0; font-weight:500; }
+
+/* ── DASHBOARD VIEW ── */
+.dash-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.dash-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:20px 22px; box-shadow:0 2px 12px rgba(247,49,138,0.06); }
+.dash-card-title { font-family:'League Spartan',sans-serif; font-size:0.62rem; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.dash-card-title span { width:6px; height:6px; border-radius:50%; display:inline-block; }
+.funnel-bars { display:flex; flex-direction:column; gap:10px; }
+.funnel-row { display:flex; align-items:center; gap:12px; }
+.funnel-label { font-size:0.68rem; font-weight:600; color:var(--muted); width:100px; flex-shrink:0; }
+.funnel-bar-wrap { flex:1; height:8px; background:rgba(0,0,0,.06); border-radius:4px; overflow:hidden; }
+.funnel-bar { height:100%; border-radius:4px; transition:width 1s cubic-bezier(.16,1,.3,1); }
+.funnel-count { font-family:'League Spartan',sans-serif; font-weight:800; font-size:0.75rem; width:28px; text-align:right; flex-shrink:0; }
+.funnel-val { font-size:0.62rem; color:var(--muted); width:72px; text-align:right; flex-shrink:0; }
+.week-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.week-stat { text-align:center; padding:14px; background:var(--surface); border-radius:8px; }
+.week-stat-val { font-family:'League Spartan',sans-serif; font-size:1.6rem; font-weight:900; line-height:1; margin-bottom:4px; }
+.week-stat-lbl { font-size:0.58rem; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; font-weight:600; }
+.canal-list { display:flex; flex-direction:column; gap:8px; }
+.canal-row { display:flex; align-items:center; gap:10px; }
+.canal-name { font-size:0.7rem; font-weight:600; color:var(--text); width:130px; flex-shrink:0; }
+.canal-bar-wrap { flex:1; height:6px; background:rgba(0,0,0,.06); border-radius:3px; overflow:hidden; }
+.canal-bar { height:100%; border-radius:3px; background:var(--pink); }
+.canal-pct { font-size:0.65rem; font-weight:700; color:var(--muted); width:32px; text-align:right; }
+.insights-list { display:flex; flex-direction:column; gap:10px; }
+.insight-item { padding:12px 14px; border-radius:8px; font-size:0.72rem; line-height:1.5; font-weight:500; }
+.insight-item strong { font-weight:800; }
+
+/* ── MENSAGENS VIEW ── */
+.msg-layout { display:grid; grid-template-columns:220px 1fr; gap:16px; }
+.msg-sidebar { display:flex; flex-direction:column; gap:8px; }
+.msg-cat {
+  padding:10px 14px; border-radius:8px; cursor:pointer;
+  border:1px solid var(--border); background:var(--card);
+  font-family:'League Spartan',sans-serif; font-size:0.72rem; font-weight:700;
+  color:var(--muted); transition:all .15s; letter-spacing:0.3px;
+}
+.msg-cat.active { background:var(--pink); color:#fff; border-color:var(--pink); }
+.msg-cat:hover:not(.active) { border-color:var(--pink); color:var(--pink); }
+.msg-cat-badge { float:right; background:rgba(0,0,0,.12); border-radius:999px; font-size:0.6rem; padding:1px 7px; }
+.msg-cat.active .msg-cat-badge { background:rgba(255,255,255,.25); }
+.msg-content { display:flex; flex-direction:column; gap:14px; }
+.msg-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; box-shadow:0 2px 8px rgba(247,49,138,.05); }
+.msg-card-header { padding:14px 18px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--surface); }
+.msg-card-title { font-family:'League Spartan',sans-serif; font-size:0.8rem; font-weight:800; color:var(--text); }
+.msg-card-meta { font-size:0.62rem; color:var(--muted); font-weight:500; }
+.msg-card-body { padding:16px 18px; font-size:0.78rem; line-height:1.7; color:var(--text); white-space:pre-wrap; font-weight:400; font-family:'League Spartan',sans-serif; }
+.msg-card-footer { padding:10px 18px; border-top:1px solid var(--border); display:flex; gap:8px; }
+.copy-btn { font-family:'League Spartan',sans-serif; font-size:0.65rem; font-weight:700; padding:6px 14px; background:linear-gradient(135deg,#f7318a,#ff3d1f); color:#fff; border:none; border-radius:6px; cursor:pointer; transition:opacity .15s; }
+.copy-btn:hover { opacity:.85; }
+.copy-btn.copied { background:var(--green); }
+.msg-tip { font-size:0.65rem; color:var(--muted); font-style:italic; font-weight:400; }
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-family:'League Spartan',sans-serif; font-size:0.6rem; font-weight:800;
+  letter-spacing:3px; text-transform:uppercase; color:var(--muted);
+  margin-bottom:14px; margin-top:6px;
+  display:flex; align-items:center; gap:10px;
+}
+.section-label::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,var(--border),transparent); }
+
+/* ── MODAL ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(26,10,16,.5); z-index:1000; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal {
+  background:var(--card); border:1px solid var(--border); border-radius:16px;
+  width:min(720px,95vw); max-height:90vh; overflow-y:auto;
+  padding:28px 30px; box-shadow:0 8px 40px rgba(247,49,138,.18); position:relative;
+  border-top:3px solid var(--pink);
+}
+.modal-title { font-family:'League Spartan',sans-serif; font-size:1.05rem; font-weight:800; color:var(--text); margin-bottom:22px; display:flex; align-items:center; justify-content:space-between; letter-spacing:-0.3px; }
+.modal-close { background:var(--surface); border:1px solid var(--border); border-radius:8px; width:30px; height:30px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.9rem; color:var(--muted); flex-shrink:0; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
+.form-field { display:flex; flex-direction:column; gap:5px; }
+.form-field.full { grid-column:1/-1; }
+.form-field.third { grid-column:span 1; }
+.form-label { font-size:0.62rem; font-weight:800; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; }
+.form-control {
+  width:100%; background:var(--surface); border:1px solid var(--border); border-radius:8px;
+  padding:9px 12px; font-family:'League Spartan',sans-serif; font-size:0.82rem; font-weight:500;
+  color:var(--text); outline:none; transition:border-color .15s; -webkit-appearance:none;
+}
+.form-control:focus { border-color:var(--pink); background:var(--card); }
+textarea.form-control { resize:vertical; min-height:72px; }
+select.form-control {
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a6070' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center; padding-right:32px;
+}
+.radio-group { display:flex; gap:10px; }
+.radio-opt { display:flex; align-items:center; gap:6px; cursor:pointer; }
+.radio-opt input { accent-color:var(--pink); width:15px; height:15px; cursor:pointer; }
+.radio-opt label { font-size:0.78rem; font-weight:600; cursor:pointer; }
+.followup-auto { background:var(--surface); border-radius:8px; padding:10px 12px; font-size:0.68rem; color:var(--muted); font-weight:500; border:1px dashed var(--border); }
+.followup-auto strong { color:var(--pink); font-weight:800; }
+
+/* HIST */
+.hist-section { margin-bottom:18px; }
+.hist-title { font-family:'League Spartan',sans-serif; font-size:0.7rem; font-weight:800; color:var(--text); margin-bottom:10px; letter-spacing:0.3px; }
+.hist-list { max-height:180px; overflow-y:auto; margin-bottom:10px; }
+.hist-item { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid rgba(0,0,0,.05); font-size:0.7rem; }
+.hist-date { color:var(--muted); width:55px; flex-shrink:0; font-weight:500; }
+.hist-tipo { font-weight:800; color:var(--pink); flex-shrink:0; font-size:0.68rem; min-width:130px; }
+.hist-text { color:var(--text); flex:1; font-weight:500; }
+.hist-add { display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; }
+.hist-add .form-field { flex:1; min-width:140px; }
+
+.modal-actions { display:flex; gap:10px; justify-content:space-between; flex-wrap:wrap; margin-top:4px; }
+
+.seg-other-wrap { display:none; }
+.seg-other-wrap.show { display:block; }
+
+/* ── FILTER PILLS ── */
+.filter-row { display:flex; gap:8px; padding:0 0 10px; overflow-x:auto; scrollbar-width:none; flex-shrink:0; }
+.filter-row::-webkit-scrollbar { display:none; }
+.filter-pill { flex-shrink:0; padding:5px 14px; border-radius:999px; border:1px solid var(--border); background:var(--card); font-size:0.7rem; font-weight:700; color:var(--muted); cursor:pointer; white-space:nowrap; transition:all .15s; font-family:'League Spartan',sans-serif; }
+.filter-pill.active { background:var(--pink); color:#fff; border-color:var(--pink); }
+
+.msg-edit-btn { font-size:0.62rem; font-weight:700; font-family:'League Spartan',sans-serif; padding:4px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface); color:var(--muted); cursor:pointer; transition:all .15s; }
+.msg-edit-btn:hover { border-color:var(--pink); color:var(--pink); }
+.msg-edit-btn.danger { border-color:rgba(232,64,64,.3); color:#c0292a; }
+.msg-new-card { background:var(--surface); border:2px dashed var(--border); border-radius:var(--r); padding:20px; text-align:center; cursor:pointer; transition:border-color .2s; }
+.msg-new-card:hover { border-color:var(--pink); }
+.msg-new-card-label { font-family:'League Spartan',sans-serif; font-size:0.8rem; font-weight:700; color:var(--muted); }
+.modal-sm { max-width:520px; }
+.canal-tag { display:inline-block; padding:2px 8px; border-radius:999px; font-size:0.62rem; font-weight:700; background:rgba(247,49,138,.1); color:var(--pink); margin-left:6px; }
+
+
+/* ── AVATAR ── */
+.lead-avatar {
+  width:26px; height:26px; border-radius:50%;
+  object-fit:cover; flex-shrink:0;
+  border:2px solid var(--border);
+  background:var(--surface);
+}
+.lead-avatar-placeholder {
+  width:26px; height:26px; border-radius:50%;
+  background:linear-gradient(135deg,var(--pink),var(--red));
+  display:flex; align-items:center; justify-content:center;
+  font-family:'League Spartan',sans-serif; font-weight:800;
+  font-size:0.75rem; color:#fff; flex-shrink:0;
+  border:2px solid rgba(247,49,138,.2);
+}
+.avatar-upload-wrap { display:flex; align-items:center; gap:12px; }
+.avatar-preview {
+  width:56px; height:56px; border-radius:50%;
+  border:2px solid var(--border); background:var(--surface);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.3rem; flex-shrink:0; overflow:hidden;
+}
+.avatar-preview img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+.avatar-upload-label {
+  font-family:'League Spartan',sans-serif; font-size:0.72rem; font-weight:700;
+  color:var(--muted); cursor:pointer; padding:7px 14px;
+  border:1px solid var(--border); border-radius:8px; background:var(--surface);
+  transition:all .15s;
+}
+.avatar-upload-label:hover { border-color:var(--pink); color:var(--pink); }
+/* Modal avatar circle */
+.modal-avatar {
+  width:48px; height:48px; border-radius:50%; object-fit:cover;
+  border:2px solid var(--border); flex-shrink:0; background:var(--surface);
+}
+.modal-avatar-placeholder {
+  width:48px; height:48px; border-radius:50%;
+  background:linear-gradient(135deg,var(--pink),var(--red));
+  display:flex; align-items:center; justify-content:center;
+  font-family:'League Spartan',sans-serif; font-weight:800;
+  font-size:1rem; color:#fff; flex-shrink:0;
+}
+/* List avatar */
+.list-avatar {
+  width:26px; height:26px; border-radius:50%; object-fit:cover;
+  border:1px solid var(--border); vertical-align:middle; margin-right:7px;
+  background:var(--surface);
+}
+.list-avatar-ph {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:26px; height:26px; border-radius:50%;
+  background:linear-gradient(135deg,var(--pink),var(--red));
+  font-family:'League Spartan',sans-serif; font-weight:800;
+  font-size:0.6rem; color:#fff; vertical-align:middle; margin-right:7px;
+  flex-shrink:0;
+}
+
+
+/* ── DARK MODE ── */
+body.dark {
+  --bg:      #0f0a0d;
+  --card:    #1a1015;
+  --surface: #241820;
+  --border:  #3a2530;
+  --text:    #f5edf1;
+  --muted:   #9a7a88;
+  --green:   #00c896;
+  --blue:    #4fa3f7;
+  --orange:  #f5b942;
+}
+body.dark body::before { opacity: .15; }
+body.dark .backup-bar { border-left-color: var(--pink); }
+body.dark .header-link { color: var(--muted); }
+body.dark .header-link:hover { color: var(--pink); }
+body.dark .form-control { background: var(--surface); color: var(--text); border-color: var(--border); }
+body.dark .form-control:focus { background: var(--card); border-color: var(--pink); }
+body.dark .modal { background: var(--card); }
+body.dark .modal-overlay { background: rgba(0,0,0,.75); }
+body.dark .view-toggle { background: var(--surface); }
+body.dark .view-btn.active { background: var(--pink); }
+body.dark .toolbar input,
+body.dark .toolbar select { background: var(--card); color: var(--text); border-color: var(--border); }
+body.dark .filter-pill { background: var(--card); color: var(--muted); border-color: var(--border); }
+body.dark .filter-pill.active { background: var(--pink); color: #fff; border-color: var(--pink); }
+body.dark .list-table th { background: var(--surface); color: var(--muted); }
+body.dark .list-table tr:hover td { background: rgba(247,49,138,.06); }
+body.dark .msg-cat { background: var(--card); color: var(--muted); border-color: var(--border); }
+body.dark .msg-cat.active { background: var(--pink); color: #fff; }
+body.dark .msg-card { background: var(--card); border-color: var(--border); }
+body.dark .msg-card-header { background: var(--surface); }
+body.dark .msg-new-card { background: var(--surface); border-color: var(--border); }
+body.dark .followup-auto { background: var(--surface); border-color: var(--border); }
+body.dark .dup-warning { background: rgba(240,165,0,.08); border-color: rgba(240,165,0,.2); }
+body.dark .tl-day-label { border-bottom-color: var(--border); }
+body.dark .insight-item { filter: brightness(0.9); }
+body.dark .action-btn { background: var(--surface); border-color: var(--border); }
+body.dark .fu-card { background: var(--card); border-color: var(--border); }
+body.dark .dash-card { background: var(--card); border-color: var(--border); }
+body.dark .conv-card { background: var(--card); border-color: var(--border); }
+body.dark .where-stat { background: var(--surface); }
+body.dark header {
+  background: var(--card);
+  box-shadow: 0 3px 16px rgba(0,0,0,.4);
+}
+body.dark .avatar-upload-label { background: var(--surface); border-color: var(--border); color: var(--muted); }
+body.dark .avatar-preview { background: var(--surface); border-color: var(--border); }
+
+/* Dark mode toggle button */
+.theme-toggle {
+  width:36px; height:36px; border-radius:10px;
+  border:1px solid var(--border); background:var(--surface);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:1rem; transition:all .2s; flex-shrink:0;
+  color:var(--muted);
+}
+.theme-toggle:hover { border-color:var(--pink); background:var(--card); }
+
+/* ── INATIVIDADE ── */
+.lead-card.inactive { opacity:.6; border-style:dashed; }
+.lead-card.inactive:hover { opacity:1; }
+.inactive-badge { font-size:0.58rem; color:#8a6070; font-weight:700; }
+
+/* ── DIAS NO ESTÁGIO ── */
+.lc-days { font-size:0.58rem; color:var(--muted); font-weight:600; }
+.lc-days.urgent { color:#c0292a; font-weight:800; }
+
+/* ── ACTION BUTTONS ── */
+.lead-actions { display:flex; gap:5px; margin-top:6px; }
+.action-btn {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:26px; height:26px; border-radius:6px; border:1px solid var(--border);
+  background:var(--surface); cursor:pointer; text-decoration:none;
+  transition:all .15s; flex-shrink:0; line-height:1;
+}
+.action-btn:hover { background:var(--card); transform:translateY(-1px); }
+.action-btn.li { color:#0a66c2; }
+.action-btn.li:hover { border-color:#0a66c2; box-shadow:0 2px 8px rgba(10,102,194,.2); }
+.action-btn.ig { color:#e1306c; }
+.action-btn.ig:hover { border-color:#e1306c; box-shadow:0 2px 8px rgba(225,48,108,.2); }
+.action-btn.wa { color:#25D366; }
+.action-btn.wa:hover { border-color:#25D366; box-shadow:0 2px 8px rgba(37,211,102,.2); }
+
+/* ── TIMELINE ── */
+.timeline { display:flex; flex-direction:column; gap:0; }
+.tl-day { margin-bottom:16px; }
+.tl-day-label { font-family:'League Spartan',sans-serif; font-size:0.62rem; font-weight:800; color:var(--muted); letter-spacing:2px; text-transform:uppercase; padding:6px 0; border-bottom:1px solid var(--border); margin-bottom:8px; }
+.tl-item { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid rgba(0,0,0,.04); }
+.tl-item:last-child { border-bottom:none; }
+.tl-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+.tl-body { flex:1; min-width:0; }
+.tl-who { font-weight:700; font-size:0.75rem; color:var(--text); }
+.tl-empresa { font-size:0.65rem; color:var(--muted); }
+.tl-what { font-size:0.7rem; color:var(--text); margin-top:2px; }
+.tl-time { font-size:0.62rem; color:var(--muted); flex-shrink:0; text-align:right; width:55px; }
+.tl-tipo { font-size:0.62rem; font-weight:700; color:var(--pink); }
+.tl-empty { font-size:0.75rem; color:var(--muted); text-align:center; padding:40px 20px; }
+
+/* ── CONVERSÃO POR CANAL ── */
+.conv-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:16px; }
+.conv-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:18px 20px; box-shadow:0 2px 8px rgba(247,49,138,.05); }
+.conv-card-title { font-family:'League Spartan',sans-serif; font-size:0.62rem; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+.conv-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.conv-canal { font-size:0.72rem; font-weight:700; color:var(--text); width:100px; flex-shrink:0; }
+.conv-bar-wrap { flex:1; height:7px; background:rgba(0,0,0,.06); border-radius:4px; overflow:hidden; }
+.conv-bar { height:100%; border-radius:4px; }
+.conv-pct { font-family:'League Spartan',sans-serif; font-size:0.72rem; font-weight:800; width:38px; text-align:right; flex-shrink:0; }
+.conv-detail { font-size:0.62rem; color:var(--muted); margin-top:2px; }
+.conv-stat { text-align:center; }
+.conv-stat-val { font-family:'League Spartan',sans-serif; font-size:1.8rem; font-weight:900; line-height:1; }
+.conv-stat-lbl { font-size:0.6rem; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; margin-top:4px; font-weight:600; }
+
+/* ── DUPLICATE WARNING ── */
+.dup-warning { background:rgba(240,165,0,.12); border:1px solid rgba(240,165,0,.3); border-radius:8px; padding:10px 14px; font-size:0.72rem; color:#b07a00; font-weight:600; margin-bottom:12px; display:none; }
+.dup-warning.show { display:block; }
+
+footer { text-align:center; padding:24px 0 16px; font-size:0.62rem; color:var(--muted); letter-spacing:1px; font-weight:500; position:relative; z-index:1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <img src="data:image/png;base64,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" alt="Donutices" class="brand-logo">
+      <div>
+        <div class="brand-name">DONUTICES</div>
+        <div class="brand-sub">Pipeline B2B &amp; Prospecção</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Alternar modo claro/escuro">🌙</button>
+      <a class="header-link" href="../">📱 Mobile</a>&nbsp;&nbsp;<a class="header-link" href="Donutices_Financeiro.html">← Dashboard Financeiro</a>
+    </div>
+  </header>
+
+  <!-- BACKUP BAR -->
+  <div class="backup-bar">
+    <div class="backup-info">☁ Supabase · <strong id="leadCount">0 leads</strong> · <strong id="lastUpdate">—</strong> · <span id="syncStatus" style="font-weight:700;"></span></div>
+    <div class="backup-actions">
+      <button class="btn btn-secondary btn-sm" onclick="exportBackup()">Exportar Backup</button>
+      <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+        Importar Backup <input type="file" accept=".json" style="display:none" onchange="importBackup(event)">
+      </label>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-strip" id="kpiStrip"></div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="openModal()">+ Novo Lead</button>
+    <div class="view-toggle">
+      <button class="view-btn active" id="btnKanban"    onclick="setView('kanban',this)">Kanban</button>
+      <button class="view-btn"        id="btnLista"     onclick="setView('lista',this)">Lista</button>
+      <button class="view-btn"        id="btnFollowup"  onclick="setView('followup',this)">Follow-ups</button>
+      <button class="view-btn"        id="btnDashboard" onclick="setView('dashboard',this)">Dashboard</button>
+      <button class="view-btn"        id="btnMensagens" onclick="setView('mensagens',this)">Mensagens</button>
+      <button class="view-btn"        id="btnTimeline"  onclick="setView('timeline',this)">Timeline</button>
+      <button class="view-btn"        id="btnConversao" onclick="setView('conversao',this)">Conversão</button>
+    </div>
+    <input type="text" id="searchInput" placeholder="Buscar lead ou empresa..." oninput="renderView()">
+    <select id="filterEstagio" onchange="renderView()">
+      <option value="">Todos os estágios</option>
+      <option>Pesquisa</option><option>Abordagem</option><option>Proposta</option>
+      <option>Negociação</option><option>Fechado ✓</option><option>Perdido ✗</option>
+    </select>
+    <select id="filterSegmento" onchange="renderView()">
+      <option value="">Todos os segmentos</option>
+      <option>RH / Endomarketing</option><option>Eventos corporativos</option>
+      <option>Brindes personalizados</option><option>Casamento / Festa</option>
+      <option>Alimentação / Varejo</option><option>Agência / Marketing</option>
+      <option>Tecnologia / Startup</option><option>Saúde / Bem-estar</option>
+      <option>Financeiro / Fintech</option><option>Varejo / E-commerce</option>
+      <option>Outro</option>
+    </select>
+  </div>
+
+  <!-- VIEWS -->
+  <div id="viewKanban"><div class="kanban-board" id="kanbanBoard"></div></div>
+  <div id="viewLista"    style="display:none"><div class="list-card"><table class="list-table" id="listaTable"></table></div></div>
+  <div id="viewFollowup" style="display:none"><div class="fu-grid"><div class="fu-card"><div class="fu-card-title"><span style="background:#e84040;width:7px;height:7px;border-radius:50%;"></span>Follow-up Vencido</div><div id="fuLate"></div></div><div class="fu-card"><div class="fu-card-title"><span style="background:#f0a500;width:7px;height:7px;border-radius:50%;"></span>Próximos 7 dias</div><div id="fuSoon"></div></div></div></div>
+  <div id="viewDashboard" style="display:none" id="dashView"></div>
+  <div id="viewMensagens" style="display:none"></div>
+  <div id="viewTimeline"  style="display:none"></div>
+  <div id="viewConversao" style="display:none"></div>
+
+</div><!-- /wrap -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="if(event.target.id==='modal')closeModal()">
+  <div class="modal">
+    <div class="modal-title" style="gap:12px;">
+      <div id="modalAvatarCircle" style="display:none"></div>
+      <span id="modalTitle" style="flex:1">Novo Lead</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="form-grid">
+
+      <div class="form-field">
+        <label class="form-label">Nome do Contato *</label>
+        <input class="form-control" id="f_nome" placeholder="Ex: Marina Santos">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Empresa *</label>
+        <input class="form-control" id="f_empresa" placeholder="Ex: Creditas">
+      </div>
+
+      <div class="form-field">
+        <label class="form-label">Cargo</label>
+        <input class="form-control" id="f_cargo" placeholder="Ex: Gerente de RH">
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Descrição do Cargo <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:0.65rem;">(texto do LinkedIn)</span></label>
+        <textarea class="form-control" id="f_cargo_linkedin" rows="3" placeholder="Ex: Atuo como responsável por promover uma experiência de integração e desenvolvimento de pessoas que fortalece a cultura organizacional..." style="min-height:80px;"></textarea>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label">Canal de Contato</label>
+        <select class="form-control" id="f_canal">
+          <option>LinkedIn</option><option>Instagram</option><option>WhatsApp</option>
+          <option>Indicação</option><option>E-mail</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Estágio</label>
+        <select class="form-control" id="f_estagio" onchange="updateFollowupPreview()">
+          <option>Pesquisa</option><option>Abordagem</option><option>Proposta</option>
+          <option>Negociação</option><option>Fechado ✓</option><option>Perdido ✗</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label">Segmento</label>
+        <select class="form-control" id="f_segmento" onchange="toggleSegOther()">
+          <option>RH / Endomarketing</option><option>Eventos corporativos</option>
+          <option>Brindes personalizados</option><option>Casamento / Festa</option>
+          <option>Alimentação / Varejo</option><option>Agência / Marketing</option>
+          <option>Tecnologia / Startup</option><option>Saúde / Bem-estar</option>
+          <option>Financeiro / Fintech</option><option>Varejo / E-commerce</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Valor Estimado (R$)</label>
+        <input class="form-control" id="f_valor" type="number" placeholder="Ex: 1500">
+      </div>
+
+      <div class="form-field full seg-other-wrap" id="segOtherWrap">
+        <label class="form-label">Descrever o segmento</label>
+        <input class="form-control" id="f_segmento_outro" placeholder="Ex: ONG, Educação, Imobiliário...">
+      </div>
+
+      <!-- RECORRÊNCIA -->
+      <div class="form-field">
+        <label class="form-label">Possível Recorrência</label>
+        <div class="radio-group">
+          <label class="radio-opt"><input type="radio" name="recorrencia" value="sim" id="f_rec_sim" onclick="toggleRecDetail()"> <label for="f_rec_sim" style="color:var(--green);font-weight:700;">Sim</label></label>
+          <label class="radio-opt"><input type="radio" name="recorrencia" value="nao" id="f_rec_nao" onclick="toggleRecDetail()"> <label for="f_rec_nao" style="color:var(--muted);">Não</label></label>
+          <label class="radio-opt"><input type="radio" name="recorrencia" value="indefinido" id="f_rec_indef" checked onclick="toggleRecDetail()"> <label for="f_rec_indef">Indefinido</label></label>
+        </div>
+      </div>
+      <div class="form-field" id="recDetailWrap" style="display:none">
+        <label class="form-label" id="recDetailLabel">Motivo</label>
+        <input class="form-control" id="f_rec_motivo" placeholder="">
+      </div>
+
+      <!-- FOLLOW-UP -->
+      <div class="form-field full">
+        <label class="form-label">Próximo Follow-up
+          <span id="fuOverrideTgl" onclick="toggleFuOverride()" style="margin-left:10px;font-weight:600;text-transform:none;letter-spacing:0;font-size:0.7rem;color:var(--pink);cursor:pointer;">+ ajustar data</span>
+        </label>
+        <div class="followup-auto" id="followupPreview">Selecione o estágio para calcular automaticamente.</div>
+        <div id="fuOverrideWrap" style="display:none;margin-top:8px;">
+          <input class="form-control" type="date" id="f_followup_manual" onchange="applyManualFu()">
+          <div style="font-size:0.65rem;color:var(--muted);margin-top:5px;font-weight:500;">Deixe vazio para usar a data calculada automaticamente.</div>
+        </div>
+        <input type="hidden" id="f_followup">
+      </div>
+
+      <div class="form-field full">
+        <label class="form-label">Foto do Lead</label>
+        <div style="display:flex; align-items:flex-start; gap:16px;">
+          <div class="avatar-preview" id="avatarPreview" style="flex-shrink:0;">
+            <span id="avatarPlaceholderIcon">📷</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px; justify-content:center;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <label class="avatar-upload-label" for="f_avatar_upload">Escolher foto</label>
+              <input type="file" id="f_avatar_upload" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+              <button class="btn btn-danger btn-sm" style="display:none;" id="removeAvatarBtn" onclick="removeAvatar()">Remover</button>
+            </div>
+            <div style="font-size:0.62rem; color:var(--muted); font-weight:500; line-height:1.4;">JPG ou PNG · aparece no card do Kanban e na ficha</div>
+          </div>
+        </div>
+        <input type="hidden" id="f_avatar">
+      </div>
+      <div class="form-field">
+        <label class="form-label">LinkedIn URL</label>
+        <input class="form-control" id="f_linkedin_url" placeholder="linkedin.com/in/nome">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Instagram</label>
+        <input class="form-control" id="f_instagram_url" placeholder="@handle ou instagram.com/handle">
+      </div>
+      <div class="form-field">
+        <label class="form-label">WhatsApp</label>
+        <input class="form-control" id="f_whatsapp" placeholder="+55 11 91234-5678">
+      </div>
+
+      <div class="form-field full">
+        <label class="form-label">Observações</label>
+        <textarea class="form-control" id="f_obs" placeholder="Contexto, necessidades, tom da conversa..."></textarea>
+      </div>
+
+    </div><!-- /form-grid -->
+
+    <!-- DUPLICATE WARNING -->
+    <div class="dup-warning" id="dupWarning"></div>
+
+    <!-- HISTÓRICO -->
+    <div class="hist-section" id="histSection" style="display:none">
+      <div style="height:1px; background:var(--border); margin-bottom:18px;"></div>
+      <div class="hist-title">Histórico de Contatos</div>
+      <div class="hist-list" id="histList"></div>
+      <div class="hist-add">
+        <div class="form-field" style="flex:0 0 180px;">
+          <label class="form-label">Tipo</label>
+          <select class="form-control" id="h_tipo">
+            <option>Mensagem enviada</option><option>Resposta recebida</option>
+            <option>Reunião / Call</option><option>Proposta enviada</option>
+            <option>Follow-up</option><option>Pedido fechado</option>
+            <option>Sem resposta</option><option>Outro</option>
+          </select>
+        </div>
+        <div class="form-field" style="flex:1;min-width:180px;">
+          <label class="form-label">Nota</label>
+          <input class="form-control" id="h_nota" placeholder="O que aconteceu?">
+        </div>
+        <button class="btn btn-secondary btn-sm" style="margin-bottom:1px;" onclick="addHistorico()">+ Registrar</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <div><button class="btn btn-danger btn-sm" id="btnDelete" style="display:none" onclick="deleteLead()">Excluir Lead</button></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary"  onclick="saveLead()">Salvar Lead</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MSG EDIT MODAL -->
+<div class="modal-overlay" id="msgModalOverlay" onclick="if(event.target.id==='msgModalOverlay')closeMsgModal()">
+  <div class="modal modal-sm">
+    <div id="msgModalBody"></div>
+  </div>
+</div>
+
+<footer>Donutices · Pipeline B2B · Dados salvos no navegador</footer>
+
+<script>
+
+// ════════════════════════════════
+// DARK MODE
+// ════════════════════════════════
+const THEME_KEY = 'donutices_theme';
+
+function applyTheme(dark) {
+  document.body.classList.toggle('dark', dark);
+  const btn = document.getElementById('themeToggle');
+  if(btn) btn.textContent = dark ? '☀️' : '🌙';
+  btn.title = dark ? 'Modo claro' : 'Modo escuro';
+}
+
+function toggleTheme() {
+  const isDark = !document.body.classList.contains('dark');
+  localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+  applyTheme(isDark);
+}
+
+// Init theme on load
+(function() {
+  const saved = localStorage.getItem(THEME_KEY);
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(saved === 'dark' || (!saved && prefersDark));
+})();
+
+
+// ════════════════════════════════
+// SUPABASE — via official JS SDK
+// ════════════════════════════════
+const SB_URL  = 'https://ioksrnomzcembfkzowbr.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlva3Nybm9temNlbWJma3pvd2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNzkxODEsImV4cCI6MjA5Mjk1NTE4MX0.SJZ22Nvas4SeRzBFVjG-VWMQ78mIhmev38Nx8zolCiE';
+const LOCAL_KEY = 'donutices_b2b_cache';
+
+// Initialize Supabase client (SDK loaded via CDN in <head>)
+let _sb = null;
+function getSB() {
+  if(!_sb && window.supabase) {
+    _sb = window.supabase.createClient(SB_URL, SB_KEY);
+  }
+  return _sb;
+}
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(LOCAL_KEY)||'[]'); } catch(e) { return []; }
+}
+
+async function loadFromCloud() {
+  const sb = getSB();
+  if(!sb) { setStatus('SDK não carregado', 'var(--red)'); return load(); }
+  setStatus('Sincronizando...', 'var(--orange)');
+  try {
+    const { data, error } = await sb.from('leads').select('id, data, updated_at').order('updated_at', { ascending: false });
+    if(error) throw error;
+    const leads = (data||[]).map(r => ({...r.data, id: r.id}));
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(leads));
+    localStorage.setItem(LOCAL_KEY+'_ts', new Date().toISOString());
+    setStatus('✓ Sincronizado', 'var(--green)');
+    setTimeout(()=>setStatus(''), 3000);
+    return leads;
+  } catch(e) {
+    console.warn('Supabase error:', e.message);
+    setStatus('⚠ Offline — cache local', 'var(--orange)');
+    return load();
+  }
+}
+
+async function saveLead_sb(lead) {
+  const sb = getSB(); if(!sb) return;
+  const { error } = await sb.from('leads').upsert({
+    id: lead.id,
+    data: lead,
+    updated_at: new Date().toISOString()
+  });
+  if(error) throw error;
+}
+
+async function deleteLead_sb(id) {
+  const sb = getSB(); if(!sb) return;
+  const { error } = await sb.from('leads').delete().eq('id', id);
+  if(error) throw error;
+}
+
+function save(leads) {
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(leads));
+  localStorage.setItem(LOCAL_KEY+'_ts', new Date().toISOString());
+}
+
+function setStatus(msg, color='var(--muted)') {
+  const el = document.getElementById('syncStatus');
+  if(el) { el.textContent = msg; el.style.color = color; }
+}
+
+function updateBackupBar() {
+  const leads = load();
+  document.getElementById('leadCount').textContent = leads.length+' leads';
+  // Check for custom msgs
+  try {
+    const msgsC = JSON.parse(localStorage.getItem(MSGS_KEY)||'{}');
+    const nCustom = Object.values(msgsC).reduce((a,c)=>a+(c.msgs?.length||0),0);
+    const extra = nCustom > 0 ? ' · '+nCustom+' msg'+( nCustom>1?'s':'')+' custom' : '';
+    document.getElementById('leadCount').textContent = leads.length+' leads'+extra;
+  } catch(e) {}
+  const ts = localStorage.getItem(KEY+'_ts');
+  document.getElementById('lastUpdate').textContent = ts
+    ? new Date(ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+}
+function exportBackup() {
+  // Load custom msgs (only what user changed/added beyond defaults)
+  let msgsCustom = {};
+  try { msgsCustom = JSON.parse(localStorage.getItem(MSGS_KEY)||'{}'); } catch(e) {}
+  const payload = {
+    version: 3,
+    date: new Date().toISOString(),
+    leads: load(),
+    msgs_custom: msgsCustom,
+  };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
+  a.download = 'Donutices_B2B_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+function importBackup(evt) {
+  const file = evt.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const data  = JSON.parse(e.target.result);
+      const leads = Array.isArray(data) ? data : (data.leads||[]);
+      const hasMsgs = data.msgs_custom && Object.keys(data.msgs_custom).length > 0;
+      const msg = 'Importar ' + leads.length + ' leads'
+        + (hasMsgs ? ' + mensagens personalizadas' : '')
+        + '? Dados atuais serão substituídos.';
+      if(!confirm(msg)) return;
+      save(leads);
+      if(hasMsgs) localStorage.setItem(MSGS_KEY, JSON.stringify(data.msgs_custom));
+      renderAll();
+      // Sync to Supabase
+      setStatus('Enviando para nuvem...', 'var(--orange)');
+      try {
+        // Delete all existing and re-insert
+        await sbFetch('leads?id=neq.placeholder', { method: 'DELETE' });
+        for(const lead of leads) { await saveLead_sb(lead); }
+        setStatus('✓ Sincronizado com a nuvem', 'var(--green)');
+        setTimeout(()=>setStatus(''), 3000);
+      } catch(e) {
+        setStatus('⚠ Salvo localmente (sync pendente)', 'var(--orange)');
+      }
+      alert('Backup importado!\n\nLeads: ' + leads.length + (hasMsgs ? '\nMensagens: incluídas' : ''));
+    } catch(e) { alert('Arquivo inválido.'); }
+  };
+  reader.readAsText(file); evt.target.value='';
+}
+
+// ════════════════════════════════
+// FOLLOW-UP AUTOMÁTICO
+// ════════════════════════════════
+const FOLLOWUP_RULES = {
+  'Pesquisa':   { days:2,  msg:'2 dias — tempo para pesquisar e enviar conexão' },
+  'Abordagem':  { days:4,  msg:'4 dias — aguarda resposta à primeira mensagem' },
+  'Proposta':   { days:5,  msg:'5 dias — follow-up após envio do material' },
+  'Negociação': { days:3,  msg:'3 dias — acompanhamento ativo' },
+  'Fechado ✓':  { days:15, msg:'15 dias — pós-venda e fidelização' },
+  'Perdido ✗':  { days:60, msg:'60 dias — reativação futura' },
+};
+
+function calcFollowup(estagio) {
+  const rule = FOLLOWUP_RULES[estagio];
+  if(!rule) return null;
+  const d = new Date();
+  d.setDate(d.getDate() + rule.days);
+  return d.toISOString().slice(0,10);
+}
+
+function updateFollowupPreview() {
+  const estagio = document.getElementById('f_estagio').value;
+  const rule    = FOLLOWUP_RULES[estagio];
+  const date    = calcFollowup(estagio);
+  const preview = document.getElementById('followupPreview');
+  const hidden  = document.getElementById('f_followup');
+  const manual  = document.getElementById('f_followup_manual');
+  if(rule && date) {
+    const fmtDate = new Date(date+'T00:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+    preview.innerHTML = '<strong>'+fmtDate+'</strong> — '+rule.msg;
+    // Only set auto date if manual not overriding
+    if(!manual || !manual.value) hidden.value = date;
+  }
+}
+
+function toggleFuOverride() {
+  const wrap = document.getElementById('fuOverrideWrap');
+  const tgl  = document.getElementById('fuOverrideTgl');
+  const showing = wrap.style.display !== 'none';
+  if(showing) {
+    wrap.style.display='none'; tgl.textContent='+ ajustar data';
+    // Reset to auto
+    document.getElementById('f_followup_manual').value='';
+    updateFollowupPreview();
+  } else {
+    wrap.style.display='block'; tgl.textContent='× usar data automática';
+  }
+}
+
+function applyManualFu() {
+  const manual = document.getElementById('f_followup_manual').value;
+  const hidden = document.getElementById('f_followup');
+  const preview= document.getElementById('followupPreview');
+  if(manual) {
+    hidden.value = manual;
+    const fmtDate = new Date(manual+'T00:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+    preview.innerHTML = '<strong>'+fmtDate+'</strong> <span style="color:var(--orange);font-weight:700">✎ data ajustada manualmente</span>';
+  }
+}
+
+// ════════════════════════════════
+// SEGMENTO OUTRO
+// ════════════════════════════════
+function toggleSegOther() {
+  const val = document.getElementById('f_segmento').value;
+  const wrap = document.getElementById('segOtherWrap');
+  wrap.style.display = val==='Outro' ? 'block' : 'none';
+  wrap.classList.toggle('show', val==='Outro');
+}
+
+// ════════════════════════════════
+// RECORRÊNCIA
+// ════════════════════════════════
+function toggleRecDetail() {
+  const val = document.querySelector('input[name="recorrencia"]:checked')?.value;
+  const wrap = document.getElementById('recDetailWrap');
+  const lbl  = document.getElementById('recDetailLabel');
+  const inp  = document.getElementById('f_rec_motivo');
+  if(val==='sim') {
+    wrap.style.display='block'; lbl.textContent='Por que sim?';
+    inp.placeholder='Ex: compra mensal de aniversariantes, recorrência declarada...';
+  } else if(val==='nao') {
+    wrap.style.display='block'; lbl.textContent='Por que não?';
+    inp.placeholder='Ex: pedido pontual para evento único, sem budget recorrente...';
+  } else {
+    wrap.style.display='none';
+  }
+}
+
+// ════════════════════════════════
+// MODAL
+// ════════════════════════════════
+let editId = null;
+
+function openModal(id) {
+  editId = id||null;
+  const leads = load();
+  const lead  = id ? leads.find(l=>l.id===id) : null;
+
+  document.getElementById('modalTitle').textContent = lead ? 'Editar Lead' : 'Novo Lead';
+  document.getElementById('btnDelete').style.display = lead ? 'inline-block' : 'none';
+  document.getElementById('histSection').style.display = lead ? 'block' : 'none';
+
+  document.getElementById('f_nome').value             = lead?.nome||'';
+  document.getElementById('f_empresa').value          = lead?.empresa||'';
+  document.getElementById('f_cargo').value            = lead?.cargo||'';
+  document.getElementById('f_cargo_linkedin').value   = lead?.cargo_linkedin||'';
+  // Reset fu override
+  const fuOW = document.getElementById('fuOverrideWrap'); if(fuOW) { fuOW.style.display='none'; document.getElementById('fuOverrideTgl').textContent='+ ajustar data'; document.getElementById('f_followup_manual').value=''; }
+  document.getElementById('f_canal').value            = lead?.canal||'LinkedIn';
+  document.getElementById('f_segmento').value         = lead?.segmento||'RH / Endomarketing';
+  document.getElementById('f_estagio').value          = lead?.estagio||'Pesquisa';
+  document.getElementById('f_valor').value            = lead?.valor||'';
+  document.getElementById('f_obs').value              = lead?.obs||'';
+  document.getElementById('f_segmento_outro').value   = lead?.segmento_outro||'';
+  document.getElementById('f_rec_motivo').value       = lead?.rec_motivo||'';
+  document.getElementById('f_linkedin_url').value   = lead?.linkedin_url||'';
+  document.getElementById('f_instagram_url').value  = lead?.instagram_url||'';
+  document.getElementById('f_whatsapp').value        = lead?.whatsapp||'';
+  // Avatar
+  document.getElementById('f_avatar').value = lead?.avatar||'';
+  setAvatarPreview(lead?.avatar||null);
+  // Modal title avatar
+  const macEl = document.getElementById('modalAvatarCircle');
+  if(lead?.avatar||lead?.nome) {
+    macEl.style.display='block';
+    macEl.innerHTML = buildAvatar(lead||{nome:''}, 40, '');
+  } else { macEl.style.display='none'; }
+
+  // Duplicate check (only on new lead)
+  const dupWarn = document.getElementById('dupWarning');
+  dupWarn.classList.remove('show'); dupWarn.textContent='';
+  if(!id) {
+    document.getElementById('f_nome').addEventListener('input', checkDuplicate, { once:false });
+    document.getElementById('f_empresa').addEventListener('input', checkDuplicate, { once:false });
+  }
+
+  // Recorrência radio
+  const recVal = lead?.recorrencia||'indefinido';
+  const radio = document.querySelector('input[name="recorrencia"][value="'+recVal+'"]');
+  if(radio) radio.checked = true;
+  toggleRecDetail();
+  toggleSegOther();
+
+  // Follow-up auto
+  updateFollowupPreview();
+  if(lead?.followup) {
+    document.getElementById('f_followup').value = lead.followup;
+    const rule = FOLLOWUP_RULES[lead.estagio];
+    const fmtDate = new Date(lead.followup+'T00:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+    document.getElementById('followupPreview').innerHTML = '<strong>'+fmtDate+'</strong>'+(rule?' — '+rule.msg:'');
+  }
+
+  if(lead) renderHist(lead.historico||[]);
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  editId = null;
+}
+
+function getFormData() {
+  const seg = document.getElementById('f_segmento').value;
+  const segFinal = seg==='Outro'
+    ? (document.getElementById('f_segmento_outro').value.trim()||'Outro')
+    : seg;
+  return {
+    nome:           document.getElementById('f_nome').value.trim(),
+    empresa:        document.getElementById('f_empresa').value.trim(),
+    cargo:          document.getElementById('f_cargo').value.trim(),
+    cargo_linkedin: document.getElementById('f_cargo_linkedin').value.trim(),
+    canal:          document.getElementById('f_canal').value,
+    segmento:       segFinal,
+    estagio:        document.getElementById('f_estagio').value,
+    valor:          parseFloat(document.getElementById('f_valor').value)||0,
+    followup:       document.getElementById('f_followup').value,
+    obs:            document.getElementById('f_obs').value.trim(),
+    segmento_outro: document.getElementById('f_segmento_outro').value.trim(),
+    recorrencia:    document.querySelector('input[name="recorrencia"]:checked')?.value||'indefinido',
+    rec_motivo:     document.getElementById('f_rec_motivo').value.trim(),
+    linkedin_url:   document.getElementById('f_linkedin_url').value.trim(),
+    instagram_url:  document.getElementById('f_instagram_url').value.trim(),
+    whatsapp:       document.getElementById('f_whatsapp').value.trim(),
+    avatar:         document.getElementById('f_avatar').value,
+  };
+}
+
+async function saveLead() {
+  const data  = getFormData();
+  if(!data.nome||!data.empresa) { alert('Nome e Empresa são obrigatórios.'); return; }
+  const leads = load();
+  const now   = new Date().toISOString();
+  let leadToSave;
+  if(editId) {
+    const i = leads.findIndex(l=>l.id===editId);
+    if(i>=0) {
+      const prev = leads[i];
+      const estagioChanged = prev.estagio !== data.estagio;
+      Object.assign(leads[i], data, {
+        updatedAt: now,
+        estagio_since: estagioChanged ? now : (prev.estagio_since||prev.createdAt||now),
+      });
+      leadToSave = leads[i];
+    }
+  } else {
+    leadToSave = { id:'l'+Date.now(), ...data, createdAt:now, updatedAt:now, estagio_since:now, historico:[] };
+    leads.push(leadToSave);
+  }
+  save(leads);
+  closeModal();
+  renderAll();
+  // Push to Supabase in background
+  if(leadToSave) {
+    setStatus('Salvando na nuvem...', 'var(--orange)');
+    try {
+      await saveLead_sb(leadToSave);
+      setStatus('✓ Salvo', 'var(--green)');
+      setTimeout(()=>setStatus(''), 2000);
+    } catch(e) {
+      setStatus('⚠ Salvo localmente (offline)', 'var(--orange)');
+    }
+  }
+}
+
+async function deleteLead() {
+  if(!confirm('Excluir este lead permanentemente?')) return;
+  const id = editId;
+  save(load().filter(l=>l.id!==id));
+  closeModal();
+  renderAll();
+  try {
+    await deleteLead_sb(id);
+  } catch(e) {
+    console.warn('Delete sync failed:', e.message);
+  }
+}
+
+// ════════════════════════════════
+// HELPERS
+// ════════════════════════════════
+function checkDuplicate() {
+  const nome    = document.getElementById('f_nome').value.trim().toLowerCase();
+  const empresa = document.getElementById('f_empresa').value.trim().toLowerCase();
+  if(!nome && !empresa) return;
+  const leads   = load();
+  const dup     = leads.find(l =>
+    l.nome.toLowerCase()===nome && empresa && l.empresa.toLowerCase()===empresa
+  );
+  const warn = document.getElementById('dupWarning');
+  if(dup) {
+    warn.innerHTML = '⚠ Lead possivelmente duplicado: <strong>'+dup.nome+' · '+dup.empresa+'</strong> já existe no pipeline ('+dup.estagio+').';
+    warn.classList.add('show');
+  } else {
+    warn.classList.remove('show');
+  }
+}
+
+function handleAvatarUpload(evt) {
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const b64 = e.target.result;
+    document.getElementById('f_avatar').value = b64;
+    setAvatarPreview(b64);
+    // Reset input value so the same file can be re-selected if needed
+    evt.target.value = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function setAvatarPreview(b64) {
+  const preview = document.getElementById('avatarPreview');
+  const icon    = document.getElementById('avatarPlaceholderIcon');
+  const rmBtn   = document.getElementById('removeAvatarBtn');
+  if(b64) {
+    preview.innerHTML = `<img src="${b64}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    if(rmBtn) rmBtn.style.display='inline-block';
+  } else {
+    preview.innerHTML = '<span id="avatarPlaceholderIcon">📷</span>';
+    if(rmBtn) rmBtn.style.display='none';
+  }
+}
+
+function removeAvatar() {
+  document.getElementById('f_avatar').value = '';
+  // Reset file input so same file can be re-selected after removal
+  const fileInput = document.getElementById('f_avatar_upload');
+  if(fileInput) fileInput.value = '';
+  setAvatarPreview(null);
+}
+
+function buildAvatar(lead, size=34, cls='') {
+  const initials = (lead.nome||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  if(lead.avatar) {
+    return `<img src="${lead.avatar}" class="${cls||'lead-avatar'}" style="width:${size}px;height:${size}px;" alt="${lead.nome}">`;
+  }
+  return `<div class="${cls||'lead-avatar-placeholder'}" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.28)}px;">${initials}</div>`;
+}
+
+function daysSince(isoDate) {
+  if(!isoDate) return null;
+  const diff = Date.now() - new Date(isoDate).getTime();
+  return Math.floor(diff / 86400000);
+}
+
+function lastActivity(lead) {
+  if(!lead.historico || lead.historico.length===0) return null;
+  const dates = lead.historico.map(h=>new Date(h.data).getTime());
+  return new Date(Math.max(...dates)).toISOString();
+}
+
+// SVG icons for action buttons
+const SVG_LINKEDIN = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>`;
+const SVG_INSTAGRAM = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`;
+const SVG_WHATSAPP = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
+
+function normalizeUrl(raw) {
+  if(!raw) return null;
+  raw = raw.trim();
+  // Already a full URL — return as-is
+  if(raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+  // Looks like a domain — add https://
+  return 'https://' + raw;
+}
+
+function buildActionBtns(lead) {
+  let btns = '';
+  // LinkedIn
+  if(lead.linkedin_url) {
+    const url = normalizeUrl(lead.linkedin_url);
+    btns += `<a class="action-btn li" href="${url}" target="_blank" title="Abrir LinkedIn" onclick="event.stopPropagation()">${SVG_LINKEDIN}</a>`;
+  }
+  // Instagram — now its own field
+  if(lead.instagram_url) {
+    const raw = lead.instagram_url.trim();
+    let url;
+    if(raw.startsWith('http://') || raw.startsWith('https://')) {
+      url = raw;
+    } else if(raw.startsWith('@')) {
+      url = 'https://www.instagram.com/' + raw.slice(1) + '/';
+    } else if(raw.includes('instagram.com')) {
+      url = 'https://www.' + raw.replace('http://','').replace('https://','').replace('www.','');
+    } else {
+      url = 'https://www.instagram.com/' + raw + '/';
+    }
+    btns += `<a class="action-btn ig" href="${url}" target="_blank" title="Abrir Instagram" onclick="event.stopPropagation()">${SVG_INSTAGRAM}</a>`;
+  }
+  // WhatsApp — now its own field
+  if(lead.whatsapp) {
+    const num = lead.whatsapp.replace(/\D/g,'');
+    const url = 'https://wa.me/' + (num.startsWith('55') ? num : '55'+num);
+    btns += `<a class="action-btn wa" href="${url}" target="_blank" title="Abrir WhatsApp" onclick="event.stopPropagation()">${SVG_WHATSAPP}</a>`;
+  }
+  return btns;
+}
+
+// ════════════════════════════════
+// HISTÓRICO
+// ════════════════════════════════
+function renderHist(hist) {
+  const el = document.getElementById('histList');
+  el.innerHTML = hist.length===0
+    ? '<div style="font-size:.7rem;color:var(--muted);padding:6px 0;font-weight:500">Nenhum contato registrado.</div>'
+    : [...hist].reverse().map(h=>`
+      <div class="hist-item">
+        <span class="hist-date">${new Date(h.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span>
+        <span class="hist-tipo">${h.tipo}</span>
+        <span class="hist-text">${h.nota||'—'}</span>
+      </div>`).join('');
+}
+async function addHistorico() {
+  const nota = document.getElementById('h_nota').value.trim();
+  if(!nota) { alert('Escreva uma nota.'); return; }
+  const leads = load();
+  const i = leads.findIndex(l=>l.id===editId);
+  if(i<0) return;
+  if(!leads[i].historico) leads[i].historico=[];
+  leads[i].historico.push({ data:new Date().toISOString(), tipo:document.getElementById('h_tipo').value, nota });
+  leads[i].updatedAt=new Date().toISOString();
+  save(leads);
+  renderHist(leads[i].historico);
+  document.getElementById('h_nota').value='';
+  try { await saveLead_sb(leads[i]); } catch(e) {}
+}
+
+// ════════════════════════════════
+// VIEW SWITCHER
+// ════════════════════════════════
+let currentView = 'kanban';
+function setView(v, btn) {
+  currentView = v;
+  ['Kanban','Lista','Followup','Dashboard','Mensagens','Timeline','Conversao'].forEach(n=>{
+    const el = document.getElementById('view'+n);
+    if(el) el.style.display='none';
+    const b  = document.getElementById('btn'+n);
+    if(b) b.classList.remove('active');
+  });
+  const show = document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1));
+  if(show) show.style.display='block';
+  if(btn) btn.classList.add('active');
+  renderView();
+}
+
+// ════════════════════════════════
+// FILTERS
+// ════════════════════════════════
+let activeFilter = 'Todos';
+function setFilter(f) { activeFilter=f; renderView(); }
+function filtered() {
+  const q  = (document.getElementById('searchInput').value||'').toLowerCase();
+  const fe = document.getElementById('filterEstagio').value;
+  const fs = document.getElementById('filterSegmento').value;
+  return load().filter(l=>{
+    const mq = !q || l.nome.toLowerCase().includes(q)||l.empresa.toLowerCase().includes(q);
+    const me = !fe || l.estagio===fe;
+    const ms = !fs || l.segmento===fs;
+    return mq&&me&&ms;
+  });
+}
+
+// ════════════════════════════════
+// CONFIG
+// ════════════════════════════════
+const ESTAGIOS = [
+  { name:'Pesquisa',   color:'#6c5ce7', bg:'rgba(108,92,231,.1)' },
+  { name:'Abordagem',  color:'#2e86de', bg:'rgba(46,134,222,.1)' },
+  { name:'Proposta',   color:'#f0a500', bg:'rgba(240,165,0,.1)' },
+  { name:'Negociação', color:'#ff3d1f', bg:'rgba(255,61,31,.1)' },
+  { name:'Fechado ✓', color:'#00a878', bg:'rgba(0,168,120,.1)' },
+  { name:'Perdido ✗', color:'#8a6070', bg:'rgba(138,96,112,.1)' },
+];
+
+function fuStatus(dateStr) {
+  if(!dateStr) return null;
+  const today=new Date(); today.setHours(0,0,0,0);
+  const d=new Date(dateStr+'T00:00:00');
+  const diff=Math.round((d-today)/86400000);
+  if(diff<0)   return {label:'Vencido',cls:'badge-late'};
+  if(diff===0) return {label:'Hoje!', cls:'badge-late'};
+  if(diff<=3)  return {label:diff+'d', cls:'badge-soon'};
+  return            {label:diff+'d', cls:'badge-ok'};
+}
+
+
+// ════════════════════════════════
+// LEAD SCORE
+// ════════════════════════════════
+function calcScore(lead) {
+  let s = 0;
+  const estPoints = {'Pesquisa':5,'Abordagem':15,'Proposta':35,'Negociação':60,'Fechado ✓':100,'Perdido ✗':0};
+  s += estPoints[lead.estagio]||0;
+  if(lead.recorrencia==='sim')   s += 20;
+  if(lead.valor >= 2000)         s += 15;
+  else if(lead.valor >= 500)     s += 8;
+  if(lead.historico?.length >= 3) s += 10;
+  const today = new Date(); today.setHours(0,0,0,0);
+  if(lead.followup) {
+    const diff = Math.round((new Date(lead.followup+'T00:00:00')-today)/86400000);
+    if(diff < 0) s -= 10; // vencido penaliza
+    if(diff >= 0 && diff <= 3) s += 5; // follow-up iminente
+  }
+  return Math.min(Math.max(s,0),100);
+}
+
+function scoreColor(s) {
+  if(s >= 70) return '#00a878';
+  if(s >= 40) return '#f0a500';
+  if(s >= 15) return '#2e86de';
+  return '#8a6070';
+}
+
+// ════════════════════════════════
+// KPIs
+// ════════════════════════════════
+function renderKpis(leads) {
+  const ativos   = leads.filter(l=>!['Fechado ✓','Perdido ✗'].includes(l.estagio));
+  const fechados = leads.filter(l=>l.estagio==='Fechado ✓');
+  const pipeline = ativos.reduce((a,l)=>a+(l.valor||0),0);
+  const receita  = fechados.reduce((a,l)=>a+(l.valor||0),0);
+  const today    = new Date(); today.setHours(0,0,0,0);
+  const late     = ativos.filter(l=>l.followup&&new Date(l.followup+'T00:00:00')<=today).length;
+  const recSim   = leads.filter(l=>l.recorrencia==='sim').length;
+
+  const kpis = [
+    { label:'Leads Ativos',        value:ativos.length+'',                           sub:'no funil agora',             stripe:'#f7318a' },
+    { label:'Potencial Pipeline',  value:'R$'+(pipeline/1000).toFixed(1)+'k',        sub:'valor estimado total',        stripe:'#ff3d1f' },
+    { label:'Receita Fechada',     value:'R$'+(receita/1000).toFixed(1)+'k',          sub:fechados.length+' contratos', stripe:'#00a878' },
+    { label:'Follow-ups Vencidos', value:late+'',                                    sub:late>0?'requer ação':'em dia', stripe:late>0?'#e84040':'#00a878' },
+    { label:'Com Recorrência',     value:recSim+'',                                  sub:'leads com potencial fixo',    stripe:'#f0a500' },
+  ];
+  document.getElementById('kpiStrip').innerHTML = kpis.map(k=>`
+    <div class="kpi" style="--stripe:${k.stripe}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════
+// KANBAN
+// ════════════════════════════════
+function renderKanban(leads) {
+  document.getElementById('kanbanBoard').innerHTML = ESTAGIOS.map(e=>{
+    const cols = leads.filter(l=>l.estagio===e.name);
+    const total = cols.reduce((a,l)=>a+(l.valor||0),0);
+    const totalStr = total>0 ? ' · R$'+(total/1000).toFixed(0)+'k' : '';
+    const cards = cols.map(l=>{
+      const fu        = fuStatus(l.followup);
+      const recIcon   = l.recorrencia==='sim' ? '<span class="lc-recorrencia">↻</span>' : '';
+      const score     = calcScore(l);
+      const scolor    = scoreColor(score);
+      // Dias no estágio
+      const daysInSt  = daysSince(l.estagio_since||l.createdAt);
+      const daysLbl   = daysInSt!==null ? daysInSt+'d no estágio' : '';
+      const daysUrgent= daysInSt > 7;
+      // Inatividade
+      const lastAct   = lastActivity(l);
+      const daysIna   = lastAct ? daysSince(lastAct) : daysSince(l.createdAt);
+      const isInactive= daysIna !== null && daysIna >= 10 && !['Fechado ✓','Perdido ✗'].includes(l.estagio);
+      // Action buttons
+      const actionBtns = buildActionBtns(l);
+      return `<div class="lead-card${isInactive?' inactive':''}" onclick="openModal('${l.id}')">
+        <div style="display:flex;align-items:flex-start;gap:8px;">
+          ${buildAvatar(l,26)}
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px;">
+              <div class="lc-name">${l.nome}</div>
+              <div style="display:flex;gap:3px;align-items:center;flex-shrink:0;">
+                ${actionBtns}
+                ${isInactive?'<span class="inactive-badge" title="Sem atividade há '+daysIna+' dias">⏸</span>':''}
+              </div>
+            </div>
+            <div class="lc-company">${l.empresa}</div>
+          </div>
+        </div>
+        <div class="lc-meta" style="margin-top:6px;">
+          ${l.valor?`<span class="lc-valor">R$${l.valor.toLocaleString('pt-BR')}</span>`:''}
+          ${fu?`<span class="badge ${fu.cls}">${fu.label}</span>`:''}
+          ${recIcon}
+          ${daysLbl?`<span class="lc-days${daysUrgent?' urgent':''}">${daysLbl}</span>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:5px;">
+          <span style="font-size:0.6rem;color:var(--muted);flex-shrink:0;">${l.canal}</span>
+          <div style="flex:1;height:3px;background:rgba(0,0,0,.08);border-radius:2px;overflow:hidden;">
+            <div style="height:100%;width:${score}%;background:${scolor};border-radius:2px;"></div>
+          </div>
+          <span style="font-family:'League Spartan',sans-serif;font-size:0.6rem;font-weight:800;color:${scolor};flex-shrink:0;line-height:1;">${score}</span>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="kanban-col">
+      <div class="kanban-header" style="background:${e.bg};color:${e.color}">
+        ${e.name} (${cols.length})${totalStr}
+      </div>
+      ${cards||'<div class="empty-col">vazio</div>'}
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════
+// LISTA
+// ════════════════════════════════
+function renderLista(leads) {
+  const brl = v=>v?'R$'+v.toLocaleString('pt-BR'):'—';
+  const head = `<thead><tr>
+    <th>Contato</th><th>Empresa</th><th>Cargo</th><th>Canal</th>
+    <th>Estágio</th><th>Segmento</th><th>Recorrência</th><th>Valor Est.</th><th>Follow-up</th>
+  </tr></thead>`;
+  const rows = leads.map(l=>{
+    const e      = ESTAGIOS.find(e=>e.name===l.estagio)||ESTAGIOS[0];
+    const fu     = l.followup ? fuStatus(l.followup) : null;
+    const fuHtml = l.followup
+      ? `<span class="badge ${fu?.cls||'badge-ok'}">${new Date(l.followup+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span>`
+      : '—';
+    const recHtml = l.recorrencia==='sim'
+      ? '<span style="color:var(--orange);font-weight:800;font-size:.65rem;">↻ Sim</span>'
+      : l.recorrencia==='nao'
+      ? '<span style="color:var(--muted);font-size:.65rem;">Não</span>'
+      : '<span style="color:var(--muted);font-size:.65rem;">—</span>';
+    // Avatar inline
+    const initials = (l.nome||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+    const avatarHtml = l.avatar
+      ? `<img src="${l.avatar}" class="list-avatar" alt="${l.nome}">`
+      : `<span class="list-avatar-ph">${initials}</span>`;
+    return `<tr onclick="openModal('${l.id}')">
+      <td style="white-space:nowrap;">${avatarHtml}${l.nome}</td>
+      <td style="color:var(--muted);font-weight:600;">${l.empresa}</td>
+      <td style="font-size:.7rem;color:var(--muted);">${l.cargo||'—'}</td>
+      <td style="font-size:.7rem;color:var(--muted);">${l.canal}</td>
+      <td><span style="color:${e.color};font-weight:800;font-size:.7rem">${l.estagio}</span></td>
+      <td style="font-size:.7rem;color:var(--muted);">${l.segmento}</td>
+      <td>${recHtml}</td>
+      <td style="color:var(--green);font-weight:700;">${brl(l.valor)}</td>
+      <td>${fuHtml}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--muted)">Nenhum lead encontrado</td></tr>';
+  document.getElementById('listaTable').innerHTML = head+'<tbody>'+rows+'</tbody>';
+}
+
+// ════════════════════════════════
+// FOLLOWUP
+// ════════════════════════════════
+function renderFollowup(leads) {
+  const today=new Date(); today.setHours(0,0,0,0);
+  const in7=new Date(today); in7.setDate(in7.getDate()+7);
+  const active=leads.filter(l=>!['Fechado ✓','Perdido ✗'].includes(l.estagio));
+  const late=active.filter(l=>l.followup&&new Date(l.followup+'T00:00:00')<=today).sort((a,b)=>new Date(a.followup)-new Date(b.followup));
+  const soon=active.filter(l=>l.followup&&new Date(l.followup+'T00:00:00')>today&&new Date(l.followup+'T00:00:00')<=in7).sort((a,b)=>new Date(a.followup)-new Date(b.followup));
+  const mkRow=l=>{
+    const e=ESTAGIOS.find(e=>e.name===l.estagio)||ESTAGIOS[0];
+    const d=l.followup?new Date(l.followup+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'—';
+    const isLate=l.followup&&new Date(l.followup+'T00:00:00')<=today;
+    return `<div class="fu-row" onclick="openModal('${l.id}')">
+      ${buildAvatar(l,28)}
+      <div style="flex:1;min-width:0">
+        <div class="fu-name">${l.nome}</div>
+        <div class="fu-co">${l.empresa} · ${l.estagio}</div>
+      </div>
+      <div class="fu-date" style="color:${isLate?'#c0292a':'#b07a00'}">${d}</div>
+    </div>`;
+  };
+  const empty=msg=>`<div class="fu-empty">${msg}</div>`;
+  document.getElementById('fuLate').innerHTML = late.length?late.map(mkRow).join(''):empty('Nenhum vencido');
+  document.getElementById('fuSoon').innerHTML = soon.length?soon.map(mkRow).join(''):empty('Nenhum nos próximos 7 dias');
+}
+
+// ════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════
+function renderDashboard() {
+  const leads   = load();
+  const ativos  = leads.filter(l=>!['Fechado ✓','Perdido ✗'].includes(l.estagio));
+  const today   = new Date(); today.setHours(0,0,0,0);
+  const in7     = new Date(today); in7.setDate(in7.getDate()+7);
+  const thisWeekStart = new Date(today); thisWeekStart.setDate(today.getDate()-today.getDay()+1);
+
+  // Semana: criados esta semana
+  const newThisWeek = leads.filter(l=>{
+    if(!l.createdAt) return false;
+    return new Date(l.createdAt)>=thisWeekStart;
+  }).length;
+  // Abordagens esta semana (historico com tipo mensagem)
+  let abodsWeek = 0;
+  leads.forEach(l=>(l.historico||[]).forEach(h=>{
+    if(h.tipo.includes('Mensagem')&&new Date(h.data)>=thisWeekStart) abodsWeek++;
+  }));
+  // Follow-ups feitos esta semana
+  let fuWeek = 0;
+  leads.forEach(l=>(l.historico||[]).forEach(h=>{
+    if(h.tipo.includes('Follow')&&new Date(h.data)>=thisWeekStart) fuWeek++;
+  }));
+
+  // Funil counts + valores
+  const funnelData = ESTAGIOS.map(e=>({
+    ...e,
+    count: leads.filter(l=>l.estagio===e.name).length,
+    value: leads.filter(l=>l.estagio===e.name).reduce((a,l)=>a+(l.valor||0),0),
+  }));
+  const maxCount = Math.max(...funnelData.map(f=>f.count),1);
+
+  // Canal breakdown
+  const canais = {};
+  leads.forEach(l=>{ canais[l.canal]=(canais[l.canal]||0)+1; });
+  const canalList = Object.entries(canais).sort((a,b)=>b[1]-a[1]);
+  const maxCanal  = Math.max(...canalList.map(c=>c[1]),1);
+
+  // Insights automáticos
+  const late = ativos.filter(l=>l.followup&&new Date(l.followup+'T00:00:00')<=today).length;
+  const soon = ativos.filter(l=>l.followup&&new Date(l.followup+'T00:00:00')>today&&new Date(l.followup+'T00:00:00')<=in7).length;
+  const semFU = ativos.filter(l=>!l.followup).length;
+  const recSim = leads.filter(l=>l.recorrencia==='sim').length;
+  const insights = [];
+  if(late>0)   insights.push({cor:'#e84040',txt:`<strong>${late} lead${late>1?'s':''} com follow-up vencido.</strong> Prioridade máxima — contato hoje.`});
+  if(soon>0)   insights.push({cor:'#f0a500',txt:`<strong>${soon} follow-up${soon>1?'s':''}</strong> nos próximos 7 dias. Prepare as mensagens.`});
+  if(semFU>0)  insights.push({cor:'#8a6070',txt:`<strong>${semFU} lead${semFU>1?'s':''}</strong> sem data de follow-up. Acesse e reabra o cadastro para atualizar.`});
+  if(recSim>0) insights.push({cor:'#f0a500',txt:`<strong>${recSim} lead${recSim>1?'s':''} com potencial recorrente.</strong> Priorize a conversão — cada um vale meses de receita.`});
+  const proposta=leads.filter(l=>l.estagio==='Proposta').length;
+  if(proposta>=3) insights.push({cor:'#2e86de',txt:`<strong>${proposta} leads em Proposta.</strong> É o estágio de maior energia — não deixe esfriar.`});
+  if(insights.length===0) insights.push({cor:'#00a878',txt:'<strong>Pipeline saudável!</strong> Continue cadenciando abordagens semanais para manter o funil cheio.'});
+
+  const el = document.getElementById('viewDashboard');
+  el.innerHTML = `
+    <div class="section-label">Volume de Trabalho Semanal</div>
+    <div class="dash-grid">
+      <div class="dash-card">
+        <div class="dash-card-title"><span style="background:var(--pink)"></span>Esta Semana</div>
+        <div class="week-stats">
+          <div class="week-stat">
+            <div class="week-stat-val" style="color:var(--pink)">${newThisWeek}</div>
+            <div class="week-stat-lbl">Leads<br>Novos</div>
+          </div>
+          <div class="week-stat">
+            <div class="week-stat-val" style="color:var(--blue)">${abodsWeek}</div>
+            <div class="week-stat-lbl">Mensagens<br>Enviadas</div>
+          </div>
+          <div class="week-stat">
+            <div class="week-stat-val" style="color:var(--orange)">${fuWeek}</div>
+            <div class="week-stat-lbl">Follow-ups<br>Feitos</div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title"><span style="background:var(--orange)"></span>Alertas &amp; Insights</div>
+        <div class="insights-list">
+          ${insights.map(i=>`<div class="insight-item" style="background:${i.cor}18;border-left:3px solid ${i.cor}">${i.txt}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="dash-grid">
+      <div class="dash-card">
+        <div class="dash-card-title"><span style="background:var(--purple)"></span>Funil de Leads</div>
+        <div class="funnel-bars">
+          ${funnelData.map(f=>`
+            <div class="funnel-row">
+              <div class="funnel-label" style="color:${f.color};font-weight:700">${f.name}</div>
+              <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${(f.count/maxCount*100).toFixed(0)}%;background:${f.color}"></div></div>
+              <div class="funnel-count" style="color:${f.color}">${f.count}</div>
+              <div class="funnel-val">${f.value>0?'R$'+(f.value/1000).toFixed(0)+'k':''}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title"><span style="background:var(--blue)"></span>Leads por Canal</div>
+        <div class="canal-list">
+          ${canalList.length ? canalList.map(([canal,n])=>`
+            <div class="canal-row">
+              <div class="canal-name">${canal}</div>
+              <div class="canal-bar-wrap"><div class="canal-bar" style="width:${(n/maxCanal*100).toFixed(0)}%"></div></div>
+              <div class="canal-pct">${n}</div>
+            </div>`).join('') : '<div class="fu-empty">Nenhum dado ainda</div>'}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ════════════════════════════════
+// MENSAGENS
+// ════════════════════════════════
+const MSGS_DEFAULT = {
+  'LinkedIn · Conexão': {
+    canal: 'LinkedIn',
+    emoji: 'in',
+    msgs: [
+      { titulo:'Versão A — Cases em destaque', corpo:`Oi [Nome], sou a Dani, fundadora da Donutices. Criamos donuts personalizados para empresas — já atendemos Itaú, Mercado Pago e Warner. Trabalho com RH e eventos. Posso conectar?`, dica:'Use quando a empresa tem cultura de reconhecimento visível no LinkedIn. Máx. 300 caracteres.' },
+      { titulo:'Versão B — Problema em foco', corpo:`Oi [Nome]! Sou a Dani da Donutices — donuts personalizados para endomarketing e eventos. Ajudamos empresas como [case relevante] a criar momentos memoráveis para seus times. Posso te adicionar?`, dica:'Substitua [case relevante] por uma empresa do mesmo setor do lead.' },
+      { titulo:'Versão C — Direta', corpo:`Oi [Nome], fundadora da Donutices aqui. Donuts personalizados para empresas — recorrência, endomarketing, eventos. Atendemos Itaú, Mercado Pago, NFL Brasil. Posso conectar?`, dica:'Use para perfis com cargo claro de RH/People — menos contexto, mais direto.' },
+    ]
+  },
+  'LinkedIn · Primeira Mensagem': {
+    canal: 'LinkedIn',
+    emoji: 'in',
+    msgs: [
+      { titulo:'Após conexão aceita (até 48h)', corpo:`Oi [Nome], obrigada por conectar!
+
+Trabalho com empresas de RH e People que querem criar momentos reais de reconhecimento para os times — aniversariantes do mês, onboarding, datas comemorativas.
+
+Fazemos donuts 100% personalizados: cor da marca, logo no produto, nome do colaborador. Cada entrega vira conteúdo espontâneo nas redes — as pessoas fotografam e postam.
+
+A [Empresa] já tem algo estruturado para essas datas, ou ainda é informal?`, dica:'A última pergunta é a mais importante — convida o decisor a refletir sobre a lacuna que a Donutices resolve.' },
+    ]
+  },
+  'Instagram · Abordagem': {
+    canal: 'Instagram',
+    emoji: 'ig',
+    msgs: [
+      { titulo:'DM — perfil pessoal do decisor', corpo:`Oi [Nome]! Vi os posts da [Empresa] sobre as ações internas — muito legal a cultura de vocês de reconhecer o time.
+
+Sou a Dani, da Donutices. Criamos donuts personalizados para empresas — cor da marca, logo no produto, nome de cada colaborador. Atendemos Itaú, Mercado Pago, Warner, entre outros.
+
+Faz sentido conversar sobre como isso poderia funcionar aí?`, dica:'Use quando o perfil da pessoa ou da empresa tem posts sobre cultura interna, aniversários ou ações de endomarketing.' },
+      { titulo:'DM — perfil da empresa', corpo:`Oi! Que projetos lindos de vocês 🍩
+
+Sou a Dani da Donutices — criamos donuts 100% personalizados para empresas, com a identidade visual da marca aplicada direto no produto. Itaú, Mercado Pago, Warner e outras empresas já usaram a gente em eventos e endomarketing.
+
+Vocês trabalham com ações de presente ou reconhecimento para o time?`, dica:'Tom mais casual. Use para empresas que têm feed ativo com conteúdo de cultura e equipe.' },
+      { titulo:'DM — após curtir post da empresa', corpo:`Oi [Nome]! Vi o post de vocês sobre [tema do post] — adorei!
+
+Sou a Dani da Donutices. A gente cria donuts personalizados com a identidade visual da empresa — muito usado em datas comemorativas e reconhecimento de equipe.
+
+Já pensaram em algo assim para o time da [Empresa]?`, dica:'Referência ao post específico aumenta muito a taxa de resposta. Personalize sempre.' },
+    ]
+  },
+  'WhatsApp · Abordagem': {
+    canal: 'WhatsApp',
+    emoji: 'wa',
+    msgs: [
+      { titulo:'Primeiro contato via WhatsApp', corpo:`Oi [Nome], tudo bem? Aqui é a Dani da Donutices!
+
+Criamos donuts 100% personalizados para empresas — cor da marca, logo aplicado à mão, nome do colaborador. Já atendemos Itaú, Mercado Pago e Warner.
+
+Trabalhamos muito com aniversariantes do mês e ações de endomarketing. Faz sentido conversar sobre a [Empresa]?`, dica:'Use apenas quando tiver o número por indicação ou via contato prévio. WhatsApp frio tem taxa de resposta baixa.' },
+    ]
+  },
+  'Qualificação': {
+    canal: 'Qualquer',
+    emoji: 'q',
+    msgs: [
+      { titulo:'Após demonstração de interesse', corpo:`Que ótimo! Adoraria entender melhor o contexto de vocês.
+
+Quantos aniversariantes têm por mês em média? E além de aniversários, têm outras datas ou momentos que costumam celebrar internamente?
+
+Com isso consigo te mostrar como ficaria um programa mensal — com volume, personalização e entrega já resolvidos.`, dica:'Essa pergunta revela o volume potencial e cria o contexto natural para a proposta de programa mensal.' },
+    ]
+  },
+  'Envio do Material': {
+    canal: 'Qualquer',
+    emoji: 'mat',
+    msgs: [
+      { titulo:'Envio do link de prospecção', corpo:`[Nome], preparei algo especificamente para vocês.
+
+Segue o link com tudo sobre como trabalhamos com empresas — cases, formatos de entrega e como funciona do briefing até a entrega: [LINK]
+
+Qualquer dúvida, estou disponível aqui ou pelo WhatsApp: (11) 91037-8564. Se preferir, posso montar uma proposta já com os números que você me passou.`, dica:'Envie o link HTML, não o PDF. Abre instantaneamente, funciona no celular, sem download.' },
+    ]
+  },
+  'Follow-up': {
+    canal: 'Qualquer',
+    emoji: 'fu',
+    msgs: [
+      { titulo:'5 dias sem resposta ao material', corpo:`Oi [Nome]! Só passando para ver se teve chance de dar uma olhada no material.
+
+Se quiser, posso montar uma proposta direta já com volume e valor — mais fácil de visualizar. Leva 10 minutos de call ou algumas mensagens aqui mesmo.`, dica:'Seja curta. Não re-explique o produto. O objetivo é reabrir a conversa.' },
+      { titulo:'7 dias sem resposta à 1ª mensagem', corpo:`Oi [Nome]! Sei que a caixa de mensagens do LinkedIn some às vezes 😄
+
+Só queria reforçar rapidinho: a Donutices cria donuts personalizados para empresas — muito usado em aniversariantes do mês e ações de RH. Atendemos Itaú, Mercado Pago, Warner.
+
+Faz sentido conversar sobre isso na [Empresa]?`, dica:'Tom leve, sem cobrança. Dá uma saída natural para a falta de resposta.' },
+      { titulo:'Reativação — 60 dias (lead perdido)', corpo:`Oi [Nome]! Passando para dar um oi depois de um tempinho 😊
+
+A Donutices lançou novos formatos de kit corporativo e lembrei da [Empresa]. Caso o momento seja diferente agora, fico à disposição para conversar!
+
+Continuamos atendendo empresas com aniversariantes, eventos e ações de marca.`, dica:'Use para leads marcados como Perdido. Tom de reativação leve, sem pressão.' },
+    ]
+  },
+  'Proposta': {
+    canal: 'Qualquer',
+    emoji: 'prop',
+    msgs: [
+      { titulo:'Programa mensal de aniversariantes', corpo:`[Nome], segue a proposta para [Empresa]:
+
+— PROGRAMA MENSAL DE ANIVERSARIANTES —
+[X] kits por mês · [4 ou 6] donuts personalizados por kit
+Glaze na cor da marca, logo aplicado à mão, cartão com nome
+Embalagem Donutices com identificação da empresa
+Entrega agendada conforme o calendário de vocês
+
+Investimento: R$ [X] por kit · Total mensal: R$ [X]
+Prazo de produção: [X] dias úteis após confirmação
+
+Sugiro começarmos com um mês piloto — sem compromisso de continuidade — para você ver como o time reage. Na nossa experiência, o piloto vira programa na maioria das vezes.
+
+Quer que eu mande o briefing para começarmos?`, dica:'Sempre proponha o piloto — elimina o risco percebido e aumenta muito a taxa de conversão.' },
+    ]
+  },
+  'Pós-venda': {
+    canal: 'Qualquer',
+    emoji: 'pv',
+    msgs: [
+      { titulo:'15 dias após a entrega', corpo:`Oi [Nome]! Queria saber como foi a recepção dos donuts aí na [Empresa] 😊
+
+O time curtiu? Rolou aquela foto espontânea que a gente adora ver?
+
+Se quiser continuar com o programa mensal, é só me falar — já tenho o histórico de vocês aqui e fica ainda mais fácil no segundo pedido.`, dica:'Dois objetivos: coleta feedback e planta a semente da recorrência de forma natural.' },
+    ]
+  },
+};
+
+// Editable messages (merged with user customizations from localStorage)
+const MSGS_KEY = 'donutices_msgs_v1';
+function loadMsgs() {
+  try {
+    const saved = localStorage.getItem(MSGS_KEY);
+    if(!saved) return JSON.parse(JSON.stringify(MSGS_DEFAULT));
+    const custom = JSON.parse(saved);
+    // Merge: defaults first, then custom additions/overrides
+    const merged = JSON.parse(JSON.stringify(MSGS_DEFAULT));
+    Object.keys(custom).forEach(cat => {
+      if(!merged[cat]) merged[cat] = custom[cat];
+      else custom[cat].msgs.forEach(m => { if(m._custom) merged[cat].msgs.push(m); });
+    });
+    // Add fully custom categories
+    Object.keys(custom).forEach(cat => { if(!MSGS_DEFAULT[cat]) merged[cat] = custom[cat]; });
+    return merged;
+  } catch(e) { return JSON.parse(JSON.stringify(MSGS_DEFAULT)); }
+}
+function saveMsgs(msgs) {
+  // Only save customizations (new categories + _custom messages)
+  const toSave = {};
+  Object.keys(msgs).forEach(cat => {
+    if(!MSGS_DEFAULT[cat]) {
+      toSave[cat] = msgs[cat];
+    } else {
+      const customMsgs = msgs[cat].msgs.filter(m => m._custom);
+      if(customMsgs.length) toSave[cat] = { ...msgs[cat], msgs: customMsgs };
+    }
+  });
+  localStorage.setItem(MSGS_KEY, JSON.stringify(toSave));
+}
+
+
+let activeMsgCat = Object.keys(loadMsgs())[0];
+
+// ── MSG MODAL (edit/create) ────────────────────────────────────
+let editMsgCtx = null; // { cat, idx } or { cat, idx:-1 } for new
+
+function openMsgModal(cat, idx) {
+  const msgs = loadMsgs();
+  const isNew = idx === -1 || idx === undefined;
+  editMsgCtx = { cat: cat||activeMsgCat, idx: isNew ? -1 : idx };
+
+  const m = (!isNew && msgs[editMsgCtx.cat]) ? msgs[editMsgCtx.cat].msgs[idx] : null;
+  const allCats = Object.keys(msgs);
+
+  const overlay = document.getElementById('msgModalOverlay');
+  document.getElementById('msgModalBody').innerHTML = `
+    <div class="modal-title" style="margin-bottom:18px;">
+      ${isNew?'Nova Mensagem':'Editar Mensagem'}
+      <button class="modal-close" onclick="closeMsgModal()">✕</button>
+    </div>
+    <div class="form-field" style="margin-bottom:12px;">
+      <label class="form-label">Categoria</label>
+      <select class="form-control" id="me_cat">
+        ${allCats.map(c=>`<option value="${c}" ${c===editMsgCtx.cat?'selected':''}>${c}</option>`).join('')}
+        <option value="__new__">+ Nova categoria...</option>
+      </select>
+    </div>
+    <div class="form-field" id="me_newcat_wrap" style="display:none;margin-bottom:12px;">
+      <label class="form-label">Nome da nova categoria</label>
+      <input class="form-control" id="me_newcat" placeholder="Ex: E-mail · Corporativo">
+    </div>
+    <div class="form-field" style="margin-bottom:12px;">
+      <label class="form-label">Título</label>
+      <input class="form-control" id="me_titulo" value="${m?.titulo||''}" placeholder="Ex: Versão A — Cases">
+    </div>
+    <div class="form-field" style="margin-bottom:12px;">
+      <label class="form-label">Corpo da mensagem</label>
+      <textarea class="form-control" id="me_corpo" rows="8" style="min-height:180px;">${m?.corpo||''}</textarea>
+    </div>
+    <div class="form-field" style="margin-bottom:18px;">
+      <label class="form-label">Dica de uso</label>
+      <input class="form-control" id="me_dica" value="${m?.dica||''}" placeholder="Quando e como usar esta mensagem">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:space-between;">
+      <div>
+        ${(!isNew && m?._custom) ? '<button class="btn btn-danger btn-sm" onclick="deleteMsgItem()">Excluir</button>' : ''}
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" onclick="closeMsgModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveMsgItem()">Salvar</button>
+      </div>
+    </div>`;
+
+  document.getElementById('me_cat').addEventListener('change', function() {
+    document.getElementById('me_newcat_wrap').style.display = this.value==='__new__'?'block':'none';
+  });
+
+  overlay.classList.add('open');
+}
+
+function closeMsgModal() {
+  document.getElementById('msgModalOverlay').classList.remove('open');
+  editMsgCtx = null;
+}
+
+function saveMsgItem() {
+  const msgs    = loadMsgs();
+  const titulo  = document.getElementById('me_titulo').value.trim();
+  const corpo   = document.getElementById('me_corpo').value.trim();
+  const dica    = document.getElementById('me_dica').value.trim();
+  const catSel  = document.getElementById('me_cat').value;
+  const newCat  = document.getElementById('me_newcat').value.trim();
+
+  if(!titulo || !corpo) { alert('Título e corpo são obrigatórios.'); return; }
+
+  let cat = catSel==='__new__' ? (newCat||'Nova Categoria') : catSel;
+
+  if(!msgs[cat]) msgs[cat] = { canal:'Outro', emoji:'novo', msgs:[] };
+
+  const newMsg = { titulo, corpo, dica, _custom: true };
+
+  if(editMsgCtx.idx >= 0) {
+    msgs[cat].msgs[editMsgCtx.idx] = { ...msgs[cat].msgs[editMsgCtx.idx], ...newMsg };
+  } else {
+    msgs[cat].msgs.push(newMsg);
+  }
+
+  saveMsgs(msgs);
+  activeMsgCat = cat;
+  closeMsgModal();
+  renderMensagens();
+}
+
+function deleteMsgItem() {
+  if(!confirm('Excluir esta mensagem?')) return;
+  const msgs = loadMsgs();
+  msgs[activeMsgCat].msgs.splice(editMsgCtx.idx, 1);
+  saveMsgs(msgs);
+  closeMsgModal();
+  renderMensagens();
+}
+
+function selectMsgCat(idx) {
+  const msgs = loadMsgs();
+  activeMsgCat = Object.keys(msgs)[idx] || activeMsgCat;
+  renderMensagens();
+}
+
+function renderMensagens() {
+  const el   = document.getElementById('viewMensagens');
+  const msgs = loadMsgs();
+  const cats = Object.keys(msgs);
+  if(!activeMsgCat || !msgs[activeMsgCat]) activeMsgCat = cats[0];
+
+  // Canal color map
+  const canalColor = { 'LinkedIn':'#2e86de','Instagram':'#e1306c','WhatsApp':'#25D366','Qualquer':'#8a6070','Outro':'#8a6070' };
+
+  const sidebar = cats.map((c,ci)=>{
+    const color = canalColor[msgs[c].canal]||'#8a6070';
+    return `<div class="msg-cat${c===activeMsgCat?' active':''}" onclick="selectMsgCat(${ci})">
+      ${c} <span class="msg-cat-badge">${msgs[c].msgs.length}</span>
+    </div>`;
+  }).join('') + `
+  <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+    <button class="btn btn-secondary btn-sm" style="width:100%;" onclick="openMsgModal(null,-1)">+ Nova mensagem</button>
+  </div>`;
+
+  const curMsgs = msgs[activeMsgCat]?.msgs || [];
+  const isDefaultCat = !!MSGS_DEFAULT[activeMsgCat];
+  const canalColor2 = canalColor[msgs[activeMsgCat]?.canal]||'#8a6070';
+
+  const msgCards = curMsgs.map((m,i)=>`
+    <div class="msg-card">
+      <div class="msg-card-header">
+        <div>
+          <div class="msg-card-title">${m.titulo} ${m._custom?'<span style="font-size:.6rem;color:var(--orange);font-weight:700">✎ personalizada</span>':''}</div>
+          <div class="msg-card-meta" style="color:${canalColor2}">${msgs[activeMsgCat]?.canal||''}</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="msg-edit-btn" onclick="openMsgModal(activeMsgCat,${i})">✎ Editar</button>
+          <button class="copy-btn" id="copybtn_${i}" onclick="copyMsg(this,${i})">Copiar</button>
+        </div>
+      </div>
+      <div class="msg-card-body">${m.corpo.replace(/\n/g,'<br>')}</div>
+      <div class="msg-card-footer"><div class="msg-tip">💡 ${m.dica}</div></div>
+    </div>`).join('');
+
+  const addCard = `
+    <div class="msg-new-card" onclick="openMsgModal(activeMsgCat,-1)">
+      <div class="msg-new-card-label">+ Adicionar mensagem nesta categoria</div>
+    </div>`;
+
+  el.innerHTML = `
+    <div class="section-label">Repositório de Mensagens</div>
+    <div class="msg-layout">
+      <div class="msg-sidebar">${sidebar}</div>
+      <div class="msg-content">${msgCards}${addCard}</div>
+    </div>`;
+}
+
+function copyMsg(btn, idx) {
+  const msgs = loadMsgs();
+  const corpo = msgs[activeMsgCat]?.msgs[idx]?.corpo || '';
+  navigator.clipboard.writeText(corpo).then(()=>{
+    btn.textContent='Copiado!'; btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='Copiar'; btn.classList.remove('copied'); },2000);
+  });
+}
+
+
+
+// ════════════════════════════════
+// TIMELINE
+// ════════════════════════════════
+function renderTimeline() {
+  const el    = document.getElementById('viewTimeline');
+  const leads = load();
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // Collect all events: lead creation + historico entries
+  const events = [];
+  leads.forEach(l => {
+    if(l.createdAt) events.push({
+      date: l.createdAt, lead: l,
+      tipo: 'Lead criado', nota: l.estagio, isCreate: true,
+    });
+    (l.historico||[]).forEach(h => {
+      events.push({ date: h.data, lead: l, tipo: h.tipo, nota: h.nota });
+    });
+  });
+
+  // Sort newest first, limit 60
+  events.sort((a,b) => new Date(b.date)-new Date(a.date));
+  const recent = events.slice(0,60);
+
+  if(recent.length === 0) {
+    el.innerHTML = '<div class="tl-empty">Nenhuma atividade registrada ainda.<br>Os eventos aparecerão aqui conforme você cadastrar leads e registrar contatos.</div>';
+    return;
+  }
+
+  // Group by day
+  const grouped = {};
+  recent.forEach(ev => {
+    const d    = new Date(ev.date);
+    const diff = Math.floor((today - new Date(d.toDateString())) / 86400000);
+    let label;
+    if(diff === 0)      label = 'Hoje';
+    else if(diff === 1) label = 'Ontem';
+    else if(diff < 7)   label = d.toLocaleDateString('pt-BR',{weekday:'long'});
+    else                label = d.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+    if(!grouped[label]) grouped[label] = [];
+    grouped[label].push(ev);
+  });
+
+  const e = ESTAGIOS;
+  const getColor = estagio => (e.find(x=>x.name===estagio)||{color:'#8a6070'}).color;
+
+  const html = Object.entries(grouped).map(([day,evs]) => `
+    <div class="tl-day">
+      <div class="tl-day-label">${day}</div>
+      ${evs.map(ev => {
+        const color = getColor(ev.lead.estagio);
+        const time  = new Date(ev.date).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+        return `<div class="tl-item" onclick="openModal('${ev.lead.id}')" style="cursor:pointer;">
+          ${buildAvatar(ev.lead,28)}
+          <div class="tl-body">
+            <div><span class="tl-who">${ev.lead.nome}</span> <span class="tl-empresa">· ${ev.lead.empresa}</span></div>
+            <div style="margin-top:2px;"><span class="tl-tipo">${ev.tipo}</span>${ev.nota?' <span class="tl-what">— '+ev.nota+'</span>':''}</div>
+          </div>
+          <div class="tl-time">${time}</div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+
+  el.innerHTML = `<div class="section-label">Atividade Recente — últimos 60 eventos</div><div class="timeline">${html}</div>`;
+}
+
+
+// ════════════════════════════════
+// CONVERSÃO POR CANAL
+// ════════════════════════════════
+function renderConversao() {
+  const el     = document.getElementById('viewConversao');
+  const leads  = load();
+  if(leads.length === 0) {
+    el.innerHTML = '<div class="tl-empty">Nenhum lead cadastrado ainda.</div>';
+    return;
+  }
+
+  const canais = [...new Set(leads.map(l=>l.canal))];
+  const ORDEM  = ['Pesquisa','Abordagem','Proposta','Negociação','Fechado ✓','Perdido ✗'];
+
+  // Per-canal stats
+  const canalStats = canais.map(canal => {
+    const grupo   = leads.filter(l=>l.canal===canal);
+    const total   = grupo.length;
+    const fechados= grupo.filter(l=>l.estagio==='Fechado ✓').length;
+    const perdidos= grupo.filter(l=>l.estagio==='Perdido ✗').length;
+    const ativos  = total - fechados - perdidos;
+    const convRate= total>0 ? (fechados/total*100).toFixed(0) : 0;
+    const avgScore= total>0 ? Math.round(grupo.reduce((a,l)=>a+calcScore(l),0)/total) : 0;
+    const recorrentes = grupo.filter(l=>l.recorrencia==='sim').length;
+    const pipeline= grupo.filter(l=>!['Fechado ✓','Perdido ✗'].includes(l.estagio)).reduce((a,l)=>a+(l.valor||0),0);
+    return { canal, total, fechados, perdidos, ativos, convRate, avgScore, recorrentes, pipeline };
+  }).sort((a,b)=>b.total-a.total);
+
+  const maxTotal = Math.max(...canalStats.map(c=>c.total),1);
+  const canalColors = {'LinkedIn':'#0a66c2','Instagram':'#e1306c','WhatsApp':'#25D366','Indicação':'#f0a500','E-mail':'#6c5ce7','Outro':'#8a6070'};
+
+  // Overall funnel
+  const funnelRows = ORDEM.map(est => {
+    const n     = leads.filter(l=>l.estagio===est).length;
+    const pct   = (n/leads.length*100).toFixed(0);
+    const e     = ESTAGIOS.find(x=>x.name===est)||{color:'#8a6070'};
+    return `<div class="conv-row">
+      <div class="conv-canal" style="color:${e.color}">${est}</div>
+      <div class="conv-bar-wrap"><div class="conv-bar" style="width:${pct}%;background:${e.color}"></div></div>
+      <div class="conv-pct" style="color:${e.color}">${n}</div>
+    </div>`;
+  }).join('');
+
+  // Canal table
+  const canalRows = canalStats.map(c => {
+    const color = canalColors[c.canal]||'#8a6070';
+    const pct   = (c.total/maxTotal*100).toFixed(0);
+    return `<div class="conv-row" style="flex-direction:column;align-items:stretch;gap:6px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.05);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="conv-canal" style="color:${color};font-size:.78rem;">${c.canal}</div>
+        <div class="conv-bar-wrap"><div class="conv-bar" style="width:${pct}%;background:${color}"></div></div>
+        <div class="conv-pct" style="color:${color}">${c.total}</div>
+      </div>
+      <div style="display:flex;gap:16px;padding-left:4px;">
+        <span style="font-size:.65rem;color:var(--green);font-weight:700;">✓ ${c.fechados} fechados (${c.convRate}%)</span>
+        <span style="font-size:.65rem;color:var(--muted);">↻ ${c.recorrentes} recorrentes</span>
+        <span style="font-size:.65rem;color:var(--blue);">R$${(c.pipeline/1000).toFixed(1)}k pipeline</span>
+        <span style="font-size:.65rem;color:var(--orange);">Score médio: ${c.avgScore}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Global stats
+  const totalLeads   = leads.length;
+  const totalFechados= leads.filter(l=>l.estagio==='Fechado ✓').length;
+  const taxaGeral    = totalLeads>0?(totalFechados/totalLeads*100).toFixed(1):0;
+  const receitaFech  = leads.filter(l=>l.estagio==='Fechado ✓').reduce((a,l)=>a+(l.valor||0),0);
+  const melhorCanal  = canalStats.sort((a,b)=>b.convRate-a.convRate)[0];
+
+  el.innerHTML = `
+    <div class="section-label">Relatório de Conversão por Canal</div>
+    <div class="conv-grid">
+      <div class="conv-card" style="text-align:center;">
+        <div class="conv-card-title" style="justify-content:center;"><span style="background:var(--green);width:6px;height:6px;border-radius:50%;display:inline-block;"></span>Taxa de Conversão Geral</div>
+        <div class="conv-stat">
+          <div class="conv-stat-val" style="color:var(--green)">${taxaGeral}%</div>
+          <div class="conv-stat-lbl">${totalFechados} de ${totalLeads} leads</div>
+        </div>
+      </div>
+      <div class="conv-card" style="text-align:center;">
+        <div class="conv-card-title" style="justify-content:center;"><span style="background:var(--pink);width:6px;height:6px;border-radius:50%;display:inline-block;"></span>Receita Total Fechada</div>
+        <div class="conv-stat">
+          <div class="conv-stat-val" style="color:var(--pink)">R$${(receitaFech/1000).toFixed(1)}k</div>
+          <div class="conv-stat-lbl">contratos confirmados</div>
+        </div>
+      </div>
+      <div class="conv-card" style="text-align:center;">
+        <div class="conv-card-title" style="justify-content:center;"><span style="background:var(--orange);width:6px;height:6px;border-radius:50%;display:inline-block;"></span>Melhor Canal</div>
+        <div class="conv-stat">
+          <div class="conv-stat-val" style="color:var(--orange);font-size:1.4rem">${melhorCanal?.canal||'—'}</div>
+          <div class="conv-stat-lbl">${melhorCanal?.convRate||0}% de conversão</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="conv-card">
+        <div class="conv-card-title"><span style="background:var(--purple);width:6px;height:6px;border-radius:50%;display:inline-block;"></span>Funil Geral</div>
+        ${funnelRows}
+      </div>
+      <div class="conv-card">
+        <div class="conv-card-title"><span style="background:var(--blue);width:6px;height:6px;border-radius:50%;display:inline-block;"></span>Detalhamento por Canal</div>
+        ${canalRows}
+      </div>
+    </div>`;
+}
+
+// ════════════════════════════════
+// RENDER ALL
+// ════════════════════════════════
+function renderView() {
+  const leads = filtered();
+  if(currentView==='kanban')    renderKanban(leads);
+  if(currentView==='lista')     renderLista(leads);
+  if(currentView==='followup')  renderFollowup(leads);
+  if(currentView==='dashboard') renderDashboard();
+  if(currentView==='mensagens') renderMensagens();
+  if(currentView==='timeline')  renderTimeline();
+  if(currentView==='conversao') renderConversao();
+}
+function renderAll() {
+  renderKpis(load());
+  updateBackupBar();
+  renderView();
+}
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+// Init: render cache immediately, then load from Supabase
+renderAll();
+
+// Wait for Supabase SDK to be available, then sync
+function initSupabase() {
+  if(window.supabase) {
+    loadFromCloud().then(cloudLeads => {
+      if(JSON.stringify(cloudLeads) !== JSON.stringify(load())) {
+        renderAll();
+      }
+    });
+  } else {
+    // SDK not ready yet — retry in 300ms
+    setTimeout(initSupabase, 300);
+  }
+}
+initSupabase();
+
+// Auto-refresh every 60 seconds to catch updates from mobile
+setInterval(() => {
+  if(window.supabase) {
+    loadFromCloud().then(fresh => {
+      const current = JSON.stringify(load());
+      if(JSON.stringify(fresh) !== current) {
+        renderAll();
+        setStatus('✓ Atualizado', 'var(--green)');
+        setTimeout(() => setStatus(''), 2000);
+      }
+    });
+  }
+}, 60000);
+</script>
+</body>
+</html>
