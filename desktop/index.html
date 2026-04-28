@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Donutices — Pipeline B2B</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -487,7 +486,7 @@ footer { text-align:center; padding:24px 0 16px; font-size:0.62rem; color:var(--
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Alternar modo claro/escuro">🌙</button>
-      <a class="header-link" href="../">📱 Mobile</a>&nbsp;&nbsp;<a class="header-link" href="Donutices_Financeiro.html">← Dashboard Financeiro</a>
+      <a class="header-link" href="Donutices_Financeiro.html">← Dashboard Financeiro</a>
     </div>
   </header>
 
@@ -749,18 +748,26 @@ function toggleTheme() {
 
 // ════════════════════════════════
 // SUPABASE — via official JS SDK
+// ════
 // ════════════════════════════════
-const SB_URL  = 'https://ioksrnomzcembfkzowbr.supabase.co';
-const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlva3Nybm9temNlbWJma3pvd2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNzkxODEsImV4cCI6MjA5Mjk1NTE4MX0.SJZ22Nvas4SeRzBFVjG-VWMQ78mIhmev38Nx8zolCiE';
+// SUPABASE — via Database Query API (sem restrição de CORS)
+// ════════════════════════════════
+const SB_PAT    = 'sbp_df3c3c4e395229ce4a34cf44b185cace3718706f';
+const SB_REF    = 'ioksrnomzcembfkzowbr';
 const LOCAL_KEY = 'donutices_b2b_cache';
+const SB_DB_URL = `https://api.supabase.com/v1/projects/${SB_REF}/database/query`;
 
-// Initialize Supabase client (SDK loaded via CDN in <head>)
-let _sb = null;
-function getSB() {
-  if(!_sb && window.supabase) {
-    _sb = window.supabase.createClient(SB_URL, SB_KEY);
-  }
-  return _sb;
+async function sbQuery(sql) {
+  const res = await fetch(SB_DB_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + SB_PAT,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ query: sql }),
+  });
+  if(!res.ok) throw new Error(await res.text());
+  return res.json();
 }
 
 function load() {
@@ -768,51 +775,50 @@ function load() {
 }
 
 async function loadFromCloud() {
-  const sb = getSB();
-  if(!sb) { setStatus('SDK não carregado', 'var(--red)'); return load(); }
   setStatus('Sincronizando...', 'var(--orange)');
   try {
-    const { data, error } = await sb.from('leads').select('id, data, updated_at').order('updated_at', { ascending: false });
-    if(error) throw error;
-    const leads = (data||[]).map(r => ({...r.data, id: r.id}));
+    const rows = await sbQuery('SELECT id, data FROM leads ORDER BY updated_at DESC');
+    const leads = (rows||[]).map(r => ({...r.data, id: r.id}));
     localStorage.setItem(LOCAL_KEY, JSON.stringify(leads));
     localStorage.setItem(LOCAL_KEY+'_ts', new Date().toISOString());
     setStatus('✓ Sincronizado', 'var(--green)');
     setTimeout(()=>setStatus(''), 3000);
+    updateBackupBar();
     return leads;
   } catch(e) {
-    console.warn('Supabase error:', e.message);
+    console.warn('Supabase:', e.message);
     setStatus('⚠ Offline — cache local', 'var(--orange)');
     return load();
   }
 }
 
 async function saveLead_sb(lead) {
-  const sb = getSB(); if(!sb) return;
-  const { error } = await sb.from('leads').upsert({
-    id: lead.id,
-    data: lead,
-    updated_at: new Date().toISOString()
-  });
-  if(error) throw error;
+  const id   = lead.id.replace(/'/g, "''");
+  const data = JSON.stringify(lead).replace(/'/g, "''");
+  const now  = new Date().toISOString();
+  await sbQuery(`
+    INSERT INTO leads (id, data, updated_at)
+    VALUES ('${id}', '${data}'::jsonb, '${now}')
+    ON CONFLICT (id) DO UPDATE
+      SET data = '${data}'::jsonb, updated_at = '${now}'
+  `);
 }
 
 async function deleteLead_sb(id) {
-  const sb = getSB(); if(!sb) return;
-  const { error } = await sb.from('leads').delete().eq('id', id);
-  if(error) throw error;
+  const safeId = id.replace(/'/g, "''");
+  await sbQuery(`DELETE FROM leads WHERE id = '${safeId}'`);
 }
 
 function save(leads) {
   localStorage.setItem(LOCAL_KEY, JSON.stringify(leads));
   localStorage.setItem(LOCAL_KEY+'_ts', new Date().toISOString());
+  updateBackupBar();
 }
 
 function setStatus(msg, color='var(--muted)') {
   const el = document.getElementById('syncStatus');
   if(el) { el.textContent = msg; el.style.color = color; }
 }
-
 function updateBackupBar() {
   const leads = load();
   document.getElementById('leadCount').textContent = leads.length+' leads';
@@ -823,7 +829,7 @@ function updateBackupBar() {
     const extra = nCustom > 0 ? ' · '+nCustom+' msg'+( nCustom>1?'s':'')+' custom' : '';
     document.getElementById('leadCount').textContent = leads.length+' leads'+extra;
   } catch(e) {}
-  const ts = localStorage.getItem(KEY+'_ts');
+  const ts = localStorage.getItem(LOCAL_KEY+'_ts');
   document.getElementById('lastUpdate').textContent = ts
     ? new Date(ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
 }
@@ -2140,35 +2146,18 @@ function renderAll() {
 
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 
-// Init: render cache immediately, then load from Supabase
+// Init
 renderAll();
+(async () => {
+  const cloudLeads = await loadFromCloud();
+  if(JSON.stringify(cloudLeads) !== JSON.stringify(load())) renderAll();
+})();
 
-// Wait for Supabase SDK to be available, then sync
-function initSupabase() {
-  if(window.supabase) {
-    loadFromCloud().then(cloudLeads => {
-      if(JSON.stringify(cloudLeads) !== JSON.stringify(load())) {
-        renderAll();
-      }
-    });
-  } else {
-    // SDK not ready yet — retry in 300ms
-    setTimeout(initSupabase, 300);
-  }
-}
-initSupabase();
-
-// Auto-refresh every 60 seconds to catch updates from mobile
-setInterval(() => {
-  if(window.supabase) {
-    loadFromCloud().then(fresh => {
-      const current = JSON.stringify(load());
-      if(JSON.stringify(fresh) !== current) {
-        renderAll();
-        setStatus('✓ Atualizado', 'var(--green)');
-        setTimeout(() => setStatus(''), 2000);
-      }
-    });
+// Auto-refresh a cada 60s
+setInterval(async () => {
+  const fresh = await loadFromCloud();
+  if(JSON.stringify(fresh) !== JSON.stringify(load())) {
+    renderAll();
   }
 }, 60000);
 </script>
